@@ -8,6 +8,9 @@
 #define RELOAD_TIMER0 	106
 
 #define TIMER_OUT_0	P2_0
+#define TIMER_OUT_2 P1_6
+
+#define TIMER_2_FREQ = 1000L
 
 #define LCD_RS P2_6
 // #define LCD_RW Px_x // Not used in this code.  Connect to GND
@@ -89,14 +92,6 @@ char _c51_external_startup (void)
 	return 0;
 }
 
-void Timer0_ISR (void) interrupt INTERRUPT_TIMER0
-{
-	SFRPAGE=0x0;
-	// Timer 0 in 16-bit mode doesn't have auto reload
-	//TMR0=0x10000L-(SYSCLK/(2*TIMER_0_FREQ));
-	TIMER_OUT_0=!TIMER_OUT_0;
-}
-
 // Uses Timer3 to delay <us> micro-seconds. 
 void Timer3us(unsigned char us)
 {
@@ -131,7 +126,7 @@ void waitms (unsigned int ms)
 
 void TIMER0_Init(void)
 {
-	CKCON0|=0b_0100_0010; // Set Timer0 Clock (T0X2) for 12 clk periods
+	CKCON0|=0b_0000_0010; // Set Timer0 Clock (T0X2) to 48 clk periods
 	TMOD&=0b_1111_0000; // Set the bits of Timer/Counter 0 to zero
 	TMOD|=0b_0000_0010; // Timer/Counter 0 used as a 8-bit auto-reload timer
 	
@@ -142,6 +137,51 @@ void TIMER0_Init(void)
 	EA=1; // enable global interrupts
 	
 	TR0=0; // Stop Timer/Counter 0
+}
+
+
+
+void TIMER2_Init(void)
+{
+	/*
+	CKCON0&=0b_1111_0111; // Set Timer2 Clock (T2X2) to 6 clk periods
+	TMOD&=0b_1111_0000; // Set the bits of Timer/Counter 2 to zero
+	TMOD|=0b_0000_0010; // Timer/Counter 2 used as a 16-bit auto-reload timer
+	
+	TL2=RELOAD_TIMER0; // initial value
+	TH2=RELOAD_TIMER0; // reload value
+
+	ET2=1; // enable timer 0 interrupt
+	EA=1; // enable global interrupts
+	
+	TR0=0; // Stop Timer/Counter 0
+	*/
+	
+
+	// Initialize timer 2 for periodic interrupts
+	TMR2CN0=0x00;   // Stop Timer2; Clear TF2;
+	CKCON0|=0b_0001_0000; // Timer 2 uses the system clock
+	// TMR2RL=(0x10000L-(SYSCLK/(2*TIMER_2_FREQ))); // Initialize reload value
+	TMR2RL=29536;
+	TMR2=0xffff;   // Set to reload immediately
+	EA=1; // enable global interrupts
+	ET2=1;         // Enable Timer2 interrupts
+	TR2=0;         // Start Timer2 (TMR2CN is bit addressable)
+}
+
+void Timer0_ISR (void) interrupt INTERRUPT_TIMER0
+{
+	SFRPAGE=0x0;
+	// Timer 0 in 16-bit mode doesn't have auto reload
+	//TMR0=0x10000L-(SYSCLK/(2*TIMER_0_FREQ));
+	TIMER_OUT_0=!TIMER_OUT_0;
+}
+
+void Timer2_ISR (void) interrupt INTERRUPT_TIMER2
+{
+	SFRPAGE=0x0;
+	TF2H = 0; // Clear Timer2 interrupt flag
+	TIMER_OUT_2=!TIMER_OUT_2;
 }
 
 void LCD_pulse (void)
@@ -235,6 +275,7 @@ int getsn (char * buff, int len)
 void main (void) 
 {
 	TIMER0_Init();
+	TIMER2_Init();
 
 	waitms(500); // Give PuTTY a chance to start.
 	printf("\x1b[2J"); // Clear screen using ANSI escape sequence.
@@ -246,8 +287,9 @@ void main (void)
 	        
 	// Configure the LCD
 	LCD_4BIT();
-	TR0 = 1;
-	// timer 0
+	TR0 = 1; // Start Timer0
+	TR2 = 1; // Start Timer2
+	
     while (1)
     {
     	
