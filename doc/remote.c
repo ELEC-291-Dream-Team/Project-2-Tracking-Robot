@@ -1,8 +1,13 @@
 #include <EFM8LB1.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #define SYSCLK      72000000L  // SYSCLK frequency in Hz
 #define BAUDRATE      115200L  // Baud rate of UART in bps
+
+#define RELOAD_TIMER0 	106
+
+#define TIMER_OUT_0	P2_0
 
 #define LCD_RS P2_6
 // #define LCD_RW Px_x // Not used in this code.  Connect to GND
@@ -84,6 +89,14 @@ char _c51_external_startup (void)
 	return 0;
 }
 
+void Timer0_ISR (void) interrupt INTERRUPT_TIMER0
+{
+	SFRPAGE=0x0;
+	// Timer 0 in 16-bit mode doesn't have auto reload
+	//TMR0=0x10000L-(SYSCLK/(2*TIMER_0_FREQ));
+	TIMER_OUT_0=!TIMER_OUT_0;
+}
+
 // Uses Timer3 to delay <us> micro-seconds. 
 void Timer3us(unsigned char us)
 {
@@ -118,8 +131,16 @@ void waitms (unsigned int ms)
 
 void TIMER0_Init(void)
 {
+	CKCON0|=0b_0100_0010; // Set Timer0 Clock (T0X2) for 12 clk periods
 	TMOD&=0b_1111_0000; // Set the bits of Timer/Counter 0 to zero
-	TMOD|=0b_0000_0001; // Timer/Counter 0 used as a 16-bit timer
+	TMOD|=0b_0000_0010; // Timer/Counter 0 used as a 8-bit auto-reload timer
+	
+	TL0=RELOAD_TIMER0; // initial value
+	TH0=RELOAD_TIMER0; // reload value
+
+	ET0=1; // enable timer 0 interrupt
+	EA=1; // enable global interrupts
+	
 	TR0=0; // Stop Timer/Counter 0
 }
 
@@ -213,8 +234,6 @@ int getsn (char * buff, int len)
 
 void main (void) 
 {
-	
-	
 	TIMER0_Init();
 
 	waitms(500); // Give PuTTY a chance to start.
@@ -227,7 +246,8 @@ void main (void)
 	        
 	// Configure the LCD
 	LCD_4BIT();
-	
+	TR0 = 1;
+	// timer 0
     while (1)
     {
     	
