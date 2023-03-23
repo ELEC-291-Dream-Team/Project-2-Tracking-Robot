@@ -1,5 +1,6 @@
 .metadata/
 .settings/
+.vscode
 .cproject
 [Dd]ebug/
 [Rr]elease/
