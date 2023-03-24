@@ -19,6 +19,13 @@ Timer 2: 1kHz output -> going to be used for the PWM
 #define TIMER_OUT_0_INVERTED P2_1
 #define TIMER_OUT_2 P1_6
 
+#define ypin1 P0_1
+#define ypin2 P0_2
+#define xpin1 P0_3
+#define xpin2 P0_4
+
+#define beacon P0_5
+
 #define TIMER_2_FREQ = 1000L
 
 #define LCD_RS P2_6
@@ -29,6 +36,16 @@ Timer 2: 1kHz output -> going to be used for the PWM
 #define LCD_D6 P2_2
 #define LCD_D7 P2_1
 #define CHARS_PER_LINE 16
+
+// Define states for movement
+#define N 21 
+#define NE 22
+#define E 12
+#define SE 02
+#define S 01
+#define SW 00
+#define W 10
+#define NW 20
 
 unsigned char overflow_count;
 int pulse_width;
@@ -199,7 +216,7 @@ void Timer2_ISR(void) interrupt INTERRUPT_TIMER2
 	}
 
 	// pulse width control
-	if (pwm_count == 100)
+	if (pwm_count == pulse_width)
 	{
 		TIMER_OUT_2 = 0;
 		TR0 = 0;
@@ -301,11 +318,13 @@ int getsn(char *buff, int len)
 
 void main(void)
 {
+	int x = 0;
+	int y = 0;
+
 	TIMER_OUT_0 = 0;
 	TIMER_OUT_0_INVERTED = 1;
 
 	waitms(500); // Give PuTTY a chance to start.
-	pulse_width = 200;
 	TIMER0_Init();
 	TIMER2_Init();
 
@@ -322,5 +341,51 @@ void main(void)
 
 	while (1)
 	{
+		// TODO: Read the input for x and y
+		
+		// % Duty * 2 = pulse width
+		if(1-beacon){
+			pulse_width = 200; // 100%
+		}
+		else{
+			switch ((2-ypin1-ypin2)*10+(2-xpin1-xpin2)){ // y*10+x
+				// % Duty * 2 = pulse width
+				case N:
+					pulse_width = 180; // 90%
+      				break;
+				
+				case NE:
+      				pulse_width = 160; // 80%
+      				break;
+
+				case E:
+      				pulse_width = 140; // 70%
+      				break;
+
+    			case SE:
+      				pulse_width = 120; // 60%
+      				break;
+
+    			case S:
+      				pulse_width = 100; // 50%
+      				break;
+
+    			case SW:
+      				pulse_width = 80; // 40%
+      				break;
+
+				case W:
+      				pulse_width = 60; // 30%
+      				break;
+
+    			case NW:
+      				pulse_width = 40; // 20%
+      				break;
+
+    			default: // Waiting
+					pulse_width = 20; // 10%
+			}//switch
+
+		}//else
 	}
 }
