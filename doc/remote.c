@@ -5,6 +5,8 @@ Timer 2: 1kHz output -> going to be used for the PWM
 
 */
 
+// Test
+
 #include <EFM8LB1.h>
 #include <stdlib.h>
 #include <stdio.h>
