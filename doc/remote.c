@@ -5,8 +5,6 @@ Timer 2: 1kHz output -> going to be used for the PWM
 
 */
 
-// Test
-
 #include <EFM8LB1.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -232,7 +230,7 @@ void TIMER0_Init(void)
 	TH0 = RELOAD_TIMER0; // reload value
 
 	ET0 = 1; // enable timer 0 interrupt
-	EA = 1;	 // enable global interrupts
+	EA = 0;	 // enable global interrupts
 
 	TR0 = 0; // Stop Timer/Counter 0
 }
@@ -246,7 +244,7 @@ void TIMER2_Init(void)
 	// TMR2RL = (SYSCLK / (24 * 3000)) - 1;
 	TMR2RL = 29536;
 	TMR2 = 0xffff; // Set to reload immediately
-	EA = 1;		   // enable global interrupts
+	EA = 0;		   // enable global interrupts
 	ET2 = 1;	   // Enable Timer2 interrupts
 	TR2 = 0;	   // Start Timer2 (TMR2CN is bit addressable)
 }
