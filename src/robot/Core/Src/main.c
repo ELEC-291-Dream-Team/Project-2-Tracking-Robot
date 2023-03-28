@@ -57,6 +57,8 @@ uint8_t WS2812Buffer[24 * LED_COUNT] = {0};
 uint16_t ADCBuffer[100];
 char StringBuffer[100];
 unsigned short LEDStep = 0;
+unsigned int TIM4Duty;
+unsigned int TIM4Period;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,7 +121,7 @@ int main(void)
     HAL_ADC_Start_DMA(&hadc1, ADCBuffer, ARRAYLEN(ADCBuffer));
 
     LEFTFORWARD();
-    RIGHTFORWARD();
+    RIGHTSTOP();
 
     SetColorAll(0, 0, 0);
     // SetColor(0, 10, 0, 0);
@@ -130,42 +132,46 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        // LEFTREVERSE();
-        // RIGHTREVERSE();
-        // SetColor(0, 10, 10, 10);
-        // SetColor(1, 10, 10, 10);
+        LEFTREVERSE();
+        RIGHTREVERSE();
+        SetColor(0, 10, 10, 10);
+        SetColor(1, 10, 10, 10);
 
-        // sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
+        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
 
-        // HAL_Delay(1000);
+        HAL_Delay(1000);
 
-        // LEFTFORWARD();
-        // RIGHTFORWARD();
-        // SetColor(0, 0, 0, 0);
-        // SetColor(1, 0, 0, 0);
-
-        // sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        // HAL_Delay(1000);
-
-        // LEFTSTOP();
-        // RIGHTSTOP();
-        // SetColor(0, 30, 0, 0);
-        // SetColor(1, 30, 0, 0);
-
-        // sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        // HAL_Delay(1000);
-
-        SetColor(0, 30, 10, 0);
-        SetColor(1, 30, 10, 0);
-        HAL_Delay(500);
+        LEFTFORWARD();
+        RIGHTFORWARD();
         SetColor(0, 0, 0, 0);
         SetColor(1, 0, 0, 0);
-        HAL_Delay(500);
+
+        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
+        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+
+        HAL_Delay(1000);
+
+        LEFTSTOP();
+        RIGHTSTOP();
+        SetColor(0, 30, 0, 0);
+        SetColor(1, 30, 0, 0);
+
+        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
+        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+
+        HAL_Delay(1000);
+
+        sprintf(StringBuffer, "f:%dHz duty:%d%%\r\n", (int)(10000.0 / TIM4Period), (int)(100.0 * TIM4Duty / TIM4Period));
+        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+
+        // emergency lights
+        // SetColor(0, 30, 10, 0);
+        // SetColor(1, 30, 10, 0);
+        // HAL_Delay(500);
+        // SetColor(0, 0, 0, 0);
+        // SetColor(1, 0, 0, 0);
+        // HAL_Delay(500);
 
         /* USER CODE END WHILE */
 
@@ -397,9 +403,9 @@ static void MX_TIM4_Init(void)
 
     /* USER CODE END TIM4_Init 1 */
     htim4.Instance = TIM4;
-    htim4.Init.Prescaler = 72 - 1;
+    htim4.Init.Prescaler = 7200 - 1;
     htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim4.Init.Period = 65535;
+    htim4.Init.Period = 10000;
     htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
@@ -408,14 +414,14 @@ static void MX_TIM4_Init(void)
     }
     sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
     sSlaveConfig.InputTrigger = TIM_TS_TI2FP2;
-    sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     sSlaveConfig.TriggerPrescaler = TIM_ICPSC_DIV1;
     sSlaveConfig.TriggerFilter = 0;
     if (HAL_TIM_SlaveConfigSynchro(&htim4, &sSlaveConfig) != HAL_OK)
     {
         Error_Handler();
     }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
     sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
     sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
     sConfigIC.ICFilter = 0;
@@ -423,7 +429,7 @@ static void MX_TIM4_Init(void)
     {
         Error_Handler();
     }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
     if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
     {
@@ -437,7 +443,7 @@ static void MX_TIM4_Init(void)
     }
     /* USER CODE BEGIN TIM4_Init 2 */
     HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
-    HAL_TIM_IC_Start(&htim4, TIM_CHANNEL_2);
+    HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);
     /* USER CODE END TIM4_Init 2 */
 }
 
@@ -599,21 +605,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         LEDStep += 2;
         // Rainbow(10, LEDStep / 255.0, 0.05);
         SetColor(2,
-                 (unsigned short)(0.05 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
-                 (unsigned short)(0.05 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
-                 (unsigned short)(0.05 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
+                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
+                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
+                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
         HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)WS2812Buffer, ARRAYLEN(WS2812Buffer));
     }
-    if (htim == &htim4)
-    {
-        // no more pulse received
-    }
+    // if (htim == &htim4)
+    // {
+    //     // no more pulse received
+    //     sprintf(StringBuffer, "TIM4 overflows %lu\r\n", __HAL_TIM_GET_COUNTER(&htim4));
+    //     HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+    // }
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim4)
     {
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) // falling edge
+        {
+            TIM4Duty = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_1);
+        }
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) // rising edge
+        {
+            TIM4Period = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_2);
+        }
     }
 }
 
