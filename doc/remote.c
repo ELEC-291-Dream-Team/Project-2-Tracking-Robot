@@ -219,7 +219,7 @@ float Volts_at_Pin(unsigned char pin)
 {
 	return ((ADC_at_Pin(pin)*VDD)/0b_0011_1111_1111_1111);
 }
-
+/*
 void TIMER0_Init(void)
 {
 	CKCON0 |= 0b_0000_0010; // Set Timer0 Clock (T0X2) to 48 clk periods
@@ -264,7 +264,6 @@ void Timer2_ISR(void) interrupt INTERRUPT_TIMER2
 {
 	SFRPAGE = 0x0;
 	TF2H = 0; // Clear Timer2 interrupt flag
-	// /*
 	// counting
 	pwm_count++;
 	if (pwm_count == 200)
@@ -282,10 +281,9 @@ void Timer2_ISR(void) interrupt INTERRUPT_TIMER2
 		TIMER_OUT_2 = 0;
 		TR0 = 0;
 	}
-	// */
 	// TIMER_OUT_2=!TIMER_OUT_2;
 }
-
+*/
 void LCD_pulse(void)
 {
 	LCD_E = 1;
@@ -383,14 +381,15 @@ void main(void)
 	int y = 1;
 	float NS_Volt;
 	float EW_Volt;
+	float B_Volt;
 	int beacon = 1;
 
-	TIMER_OUT_0 = 0;
-	TIMER_OUT_0_INVERTED = 1;
+	//TIMER_OUT_0 = 0;
+	//TIMER_OUT_0_INVERTED = 1;
 
 	waitms(500); // Give PuTTY a chance to start.
-	TIMER0_Init();
-	TIMER2_Init();
+	//TIMER0_Init();
+	//TIMER2_Init();
 
 	printf("\x1b[2J"); // Clear screen using ANSI escape sequence.
 
@@ -400,8 +399,8 @@ void main(void)
 		   __FILE__, __DATE__, __TIME__);
 
 	// Configure the LCD
-	LCD_4BIT();
-	TR2 = 1; // Start Timer2
+	//LCD_4BIT();
+	//TR2 = 1; // Start Timer2
 
 	InitPinADC(1, 1); // Configure P1.1 as North/South analog input
 	InitPinADC(1, 2); // Configure P1.2 as East/West analog input
@@ -413,15 +412,14 @@ void main(void)
 		// Read 14-bit value from the pins configured as analog inputs
 		NS_Volt = Volts_at_Pin(QFP32_MUX_P1_1); // North/South Voltage
 		EW_Volt = Volts_at_Pin(QFP32_MUX_P1_2); // East/West Voltage
-		printf("NS_Volt: %lf\n", NS_Volt);
-		printf("EW_Volt: %lf\n", EW_Volt);
+		B_Volt = Volts_at_Pin(QFP32_MUX_P1_3); // Beacon Voltage
 
 		// North/South Joystick Coordinates
-		if(NS_Volt < 1.1){
+		if(NS_Volt < 1.5){
 			y = 2;
 			printf("y = %d\n", y);
 		}
-		else if(NS_Volt > 2.2){
+		else if(NS_Volt > 2.6){
 			y = 0;
 			printf("y = %d\n", y);
 		}
@@ -431,11 +429,11 @@ void main(void)
 		}
 
 		// East/West Joystick Coordinates
-		if(EW_Volt < 1.1){
+		if(EW_Volt < 1.5){
 			x = 0;
 			printf("x = %d\n", x);
 		}
-		else if(EW_Volt > 2.2){
+		else if(EW_Volt > 2.6){
 			x = 2;
 			printf("x = %d\n", x);
 		}
@@ -443,7 +441,7 @@ void main(void)
 			x = 1;
 			printf("x = %d\n", x);
 		}
-
+		
 		// Joystick Button Toggle
 		if(Bpin){
 			while(Bpin);
