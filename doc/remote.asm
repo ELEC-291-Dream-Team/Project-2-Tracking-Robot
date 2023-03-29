@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by C51
 ; Version 1.0.0 #1170 (Feb 16 2022) (MSVC)
-; This file was generated Tue Mar 28 15:22:20 2023
+; This file was generated Tue Mar 28 15:53:09 2023
 ;--------------------------------------------------------
 $name remote
 $optc51 --model-small
@@ -32,6 +32,10 @@ $optc51 --model-small
 	public _WriteData
 	public _LCD_byte
 	public _LCD_pulse
+	public _Timer2_ISR
+	public _Timer0_ISR
+	public _TIMER2_Init
+	public _TIMER0_Init
 	public _Volts_at_Pin
 	public _ADC_at_Pin
 	public _InitPinADC
@@ -503,13 +507,13 @@ _LCDprint_PARM_2:
 	ds 1
 _getsn_PARM_2:
 	ds 2
-_getsn_buff_1_71:
+_getsn_buff_1_81:
 	ds 3
 _getsn_sloc0_1_0:
 	ds 2
-_main_NS_Volt_1_77:
+_main_NS_Volt_1_87:
 	ds 4
-_main_EW_Volt_1_77:
+_main_EW_Volt_1_87:
 	ds 4
 ;--------------------------------------------------------
 ; overlayable items in internal ram 
@@ -557,6 +561,10 @@ _LCDprint_PARM_3:
 ;--------------------------------------------------------
 	CSEG at 0x0000
 	ljmp	_crt0
+	CSEG at 0x000b
+	ljmp	_Timer0_ISR
+	CSEG at 0x002b
+	ljmp	_Timer2_ISR
 ;--------------------------------------------------------
 ; global & static initialisations
 ;--------------------------------------------------------
@@ -567,7 +575,7 @@ _LCDprint_PARM_3:
 ; data variables initialization
 ;--------------------------------------------------------
 	rseg R_DINIT
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:47: int pwm_count = 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:48: int pwm_count = 0;
 	clr	a
 	mov	_pwm_count,a
 	mov	(_pwm_count + 1),a
@@ -580,97 +588,97 @@ _LCDprint_PARM_3:
 ;Allocation info for local variables in function '_c51_external_startup'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:49: char _c51_external_startup(void)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:50: char _c51_external_startup(void)
 ;	-----------------------------------------
 ;	 function _c51_external_startup
 ;	-----------------------------------------
 __c51_external_startup:
 	using	0
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:52: SFRPAGE = 0x00;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:53: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:53: WDTCN = 0xDE; // First key
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:54: WDTCN = 0xDE; // First key
 	mov	_WDTCN,#0xDE
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:54: WDTCN = 0xAD; // Second key
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:55: WDTCN = 0xAD; // Second key
 	mov	_WDTCN,#0xAD
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:56: VDM0CN |= 0x80;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:57: VDM0CN |= 0x80;
 	orl	_VDM0CN,#0x80
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:57: RSTSRC = 0x02;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:58: RSTSRC = 0x02;
 	mov	_RSTSRC,#0x02
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:64: SFRPAGE = 0x10;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:65: SFRPAGE = 0x10;
 	mov	_SFRPAGE,#0x10
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:65: PFE0CN = 0x20; // SYSCLK < 75 MHz.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:66: PFE0CN = 0x20; // SYSCLK < 75 MHz.
 	mov	_PFE0CN,#0x20
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:66: SFRPAGE = 0x00;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:67: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:91: CLKSEL = 0x00;
-	mov	_CLKSEL,#0x00
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:92: CLKSEL = 0x00;
 	mov	_CLKSEL,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:93: while ((CLKSEL & 0x80) == 0)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:93: CLKSEL = 0x00;
+	mov	_CLKSEL,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:94: while ((CLKSEL & 0x80) == 0)
 L002001?:
 	mov	a,_CLKSEL
 	jnb	acc.7,L002001?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:95: CLKSEL = 0x03;
-	mov	_CLKSEL,#0x03
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:96: CLKSEL = 0x03;
 	mov	_CLKSEL,#0x03
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:97: while ((CLKSEL & 0x80) == 0)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:97: CLKSEL = 0x03;
+	mov	_CLKSEL,#0x03
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:98: while ((CLKSEL & 0x80) == 0)
 L002004?:
 	mov	a,_CLKSEL
 	jnb	acc.7,L002004?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:103: P0MDOUT |= 0x10; // Enable UART0 TX as push-pull output
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:104: P0MDOUT |= 0x10; // Enable UART0 TX as push-pull output
 	orl	_P0MDOUT,#0x10
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:104: XBR0 = 0x01;	 // Enable UART0 on P0.4(TX) and P0.5(RX)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:105: XBR0 = 0x01;	 // Enable UART0 on P0.4(TX) and P0.5(RX)
 	mov	_XBR0,#0x01
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:105: XBR1 = 0X00;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:106: XBR1 = 0X00;
 	mov	_XBR1,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:106: XBR2 = 0x40; // Enable crossbar and weak pull-ups
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:107: XBR2 = 0x40; // Enable crossbar and weak pull-ups
 	mov	_XBR2,#0x40
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:112: SCON0 = 0x10;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:113: SCON0 = 0x10;
 	mov	_SCON0,#0x10
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:113: CKCON0 |= 0b_0000_0000; // Timer 1 uses the system clock divided by 12.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:114: CKCON0 |= 0b_0000_0000; // Timer 1 uses the system clock divided by 12.
 	mov	_CKCON0,_CKCON0
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:114: TH1 = 0x100 - ((SYSCLK / BAUDRATE) / (2L * 12L));
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:115: TH1 = 0x100 - ((SYSCLK / BAUDRATE) / (2L * 12L));
 	mov	_TH1,#0xE6
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:115: TL1 = TH1;	   // Init Timer1
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:116: TL1 = TH1;	   // Init Timer1
 	mov	_TL1,_TH1
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:116: TMOD &= ~0xf0; // TMOD: timer 1 in 8-bit auto-reload
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:117: TMOD &= ~0xf0; // TMOD: timer 1 in 8-bit auto-reload
 	anl	_TMOD,#0x0F
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:117: TMOD |= 0x20;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:118: TMOD |= 0x20;
 	orl	_TMOD,#0x20
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:118: TR1 = 1; // START Timer1
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:119: TR1 = 1; // START Timer1
 	setb	_TR1
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:119: TI = 1;	 // Indicate TX0 ready
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:120: TI = 1;	 // Indicate TX0 ready
 	setb	_TI
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:121: return 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:122: return 0;
 	mov	dpl,#0x00
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'InitADC'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:124: void InitADC (void)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:125: void InitADC (void)
 ;	-----------------------------------------
 ;	 function InitADC
 ;	-----------------------------------------
 _InitADC:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:126: SFRPAGE = 0x00;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:127: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:127: ADEN = 0; // Disable ADC
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:128: ADEN = 0; // Disable ADC
 	clr	_ADEN
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:130: (0x0 << 0) ; // Accumulate n conversions: 0x0: 1, 0x1:4, 0x2:8, 0x3:16, 0x4:32
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:131: (0x0 << 0) ; // Accumulate n conversions: 0x0: 1, 0x1:4, 0x2:8, 0x3:16, 0x4:32
 	mov	_ADC0CN1,#0x80
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:132: (0x0 << 2); // 0:SYSCLK ADCCLK = SYSCLK. 1:HFOSC0 ADCCLK = HFOSC0.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:133: (0x0 << 2); // 0:SYSCLK ADCCLK = SYSCLK. 1:HFOSC0 ADCCLK = HFOSC0.
 	mov	_ADC0CF0,#0x20
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:134: (0x1E << 0); // Conversion Tracking Time. Tadtk = ADTK / (Fsarclk)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:135: (0x1E << 0); // Conversion Tracking Time. Tadtk = ADTK / (Fsarclk)
 	mov	_ADC0CF1,#0x1E
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:141: (0x0 << 0) ; // TEMPE. 0: Disable the Temperature Sensor. 1: Enable the Temperature Sensor.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:142: (0x0 << 0) ; // TEMPE. 0: Disable the Temperature Sensor. 1: Enable the Temperature Sensor.
 	mov	_ADC0CN0,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:144: (0x1F << 0); // ADPWR. Power Up Delay Time. Tpwrtime = ((4 * (ADPWR + 1)) + 2) / (Fadcclk)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:145: (0x1F << 0); // ADPWR. Power Up Delay Time. Tpwrtime = ((4 * (ADPWR + 1)) + 2) / (Fadcclk)
 	mov	_ADC0CF2,#0x3F
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:146: (0x0 << 0) ; // ADCM. 0x0: ADBUSY, 0x1: TIMER0, 0x2: TIMER2, 0x3: TIMER3, 0x4: CNVSTR, 0x5: CEX5, 0x6: TIMER4, 0x7: TIMER5, 0x8: CLU0, 0x9: CLU1, 0xA: CLU2, 0xB: CLU3
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:147: (0x0 << 0) ; // ADCM. 0x0: ADBUSY, 0x1: TIMER0, 0x2: TIMER2, 0x3: TIMER3, 0x4: CNVSTR, 0x5: CEX5, 0x6: TIMER4, 0x7: TIMER5, 0x8: CLU0, 0x9: CLU1, 0xA: CLU2, 0xB: CLU3
 	mov	_ADC0CN2,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:147: ADEN = 1; // Enable ADC
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:148: ADEN = 1; // Enable ADC
 	setb	_ADEN
 	ret
 ;------------------------------------------------------------
@@ -679,40 +687,40 @@ _InitADC:
 ;us                        Allocated to registers r2 
 ;i                         Allocated to registers r3 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:151: void Timer3us(unsigned char us)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:152: void Timer3us(unsigned char us)
 ;	-----------------------------------------
 ;	 function Timer3us
 ;	-----------------------------------------
 _Timer3us:
 	mov	r2,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:156: CKCON0 |= 0b_0100_0000;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:157: CKCON0 |= 0b_0100_0000;
 	orl	_CKCON0,#0x40
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:158: TMR3RL = (-(SYSCLK) / 1000000L); // Set Timer3 to overflow in 1us.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:159: TMR3RL = (-(SYSCLK) / 1000000L); // Set Timer3 to overflow in 1us.
 	mov	_TMR3RL,#0xB8
 	mov	(_TMR3RL >> 8),#0xFF
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:159: TMR3 = TMR3RL;					 // Initialize Timer3 for first overflow
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:160: TMR3 = TMR3RL;					 // Initialize Timer3 for first overflow
 	mov	_TMR3,_TMR3RL
 	mov	(_TMR3 >> 8),(_TMR3RL >> 8)
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:161: TMR3CN0 = 0x04;			 // Sart Timer3 and clear overflow flag
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:162: TMR3CN0 = 0x04;			 // Sart Timer3 and clear overflow flag
 	mov	_TMR3CN0,#0x04
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:162: for (i = 0; i < us; i++) // Count <us> overflows
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:163: for (i = 0; i < us; i++) // Count <us> overflows
 	mov	r3,#0x00
 L004004?:
 	clr	c
 	mov	a,r3
 	subb	a,r2
 	jnc	L004007?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:164: while (!(TMR3CN0 & 0x80))
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:165: while (!(TMR3CN0 & 0x80))
 L004001?:
 	mov	a,_TMR3CN0
 	jnb	acc.7,L004001?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:166: TMR3CN0 &= ~(0x80); // Clear overflow indicator
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:167: TMR3CN0 &= ~(0x80); // Clear overflow indicator
 	anl	_TMR3CN0,#0x7F
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:162: for (i = 0; i < us; i++) // Count <us> overflows
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:163: for (i = 0; i < us; i++) // Count <us> overflows
 	inc	r3
 	sjmp	L004004?
 L004007?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:168: TMR3CN0 = 0; // Stop Timer3 and clear overflow flag
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:169: TMR3CN0 = 0; // Stop Timer3 and clear overflow flag
 	mov	_TMR3CN0,#0x00
 	ret
 ;------------------------------------------------------------
@@ -721,36 +729,36 @@ L004007?:
 ;ms                        Allocated to registers r2 r3 
 ;j                         Allocated to registers r2 r3 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:171: void waitms(unsigned int ms)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:172: void waitms(unsigned int ms)
 ;	-----------------------------------------
 ;	 function waitms
 ;	-----------------------------------------
 _waitms:
 	mov	r2,dpl
 	mov	r3,dph
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:174: for (j = ms; j != 0; j--)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:175: for (j = ms; j != 0; j--)
 L005001?:
 	cjne	r2,#0x00,L005010?
 	cjne	r3,#0x00,L005010?
 	ret
 L005010?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:176: Timer3us(249);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:177: Timer3us(249);
 	mov	dpl,#0xF9
 	push	ar2
 	push	ar3
 	lcall	_Timer3us
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:177: Timer3us(249);
-	mov	dpl,#0xF9
-	lcall	_Timer3us
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:178: Timer3us(249);
 	mov	dpl,#0xF9
 	lcall	_Timer3us
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:179: Timer3us(250);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:179: Timer3us(249);
+	mov	dpl,#0xF9
+	lcall	_Timer3us
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:180: Timer3us(250);
 	mov	dpl,#0xFA
 	lcall	_Timer3us
 	pop	ar3
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:174: for (j = ms; j != 0; j--)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:175: for (j = ms; j != 0; j--)
 	dec	r2
 	cjne	r2,#0xff,L005011?
 	dec	r3
@@ -763,13 +771,13 @@ L005011?:
 ;portno                    Allocated to registers r2 
 ;mask                      Allocated to registers r3 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:184: void InitPinADC (unsigned char portno, unsigned char pinno)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:185: void InitPinADC (unsigned char portno, unsigned char pinno)
 ;	-----------------------------------------
 ;	 function InitPinADC
 ;	-----------------------------------------
 _InitPinADC:
 	mov	r2,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:187: mask = 1 << pinno;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:188: mask = 1 << pinno;
 	mov	b,_InitPinADC_PARM_2
 	inc	b
 	mov	a,#0x01
@@ -779,54 +787,54 @@ L006011?:
 L006013?:
 	djnz	b,L006011?
 	mov	r3,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:188: SFRPAGE = 0x20;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:189: SFRPAGE = 0x20;
 	mov	_SFRPAGE,#0x20
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:189: switch (portno)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:190: switch (portno)
 	cjne	r2,#0x00,L006014?
 	sjmp	L006001?
 L006014?:
 	cjne	r2,#0x01,L006015?
 	sjmp	L006002?
 L006015?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:191: case 0:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:192: case 0:
 	cjne	r2,#0x02,L006005?
 	sjmp	L006003?
 L006001?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:192: P0MDIN &= (~mask); // Set pin as analog input
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:193: P0MDIN &= (~mask); // Set pin as analog input
 	mov	a,r3
 	cpl	a
 	mov	r2,a
 	anl	_P0MDIN,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:193: P0SKIP |= mask; // Skip Crossbar decoding for this pin
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:194: P0SKIP |= mask; // Skip Crossbar decoding for this pin
 	mov	a,r3
 	orl	_P0SKIP,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:194: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:195: case 1:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:195: break;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:196: case 1:
 	sjmp	L006005?
 L006002?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:196: P1MDIN &= (~mask); // Set pin as analog input
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:197: P1MDIN &= (~mask); // Set pin as analog input
 	mov	a,r3
 	cpl	a
 	mov	r2,a
 	anl	_P1MDIN,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:197: P1SKIP |= mask; // Skip Crossbar decoding for this pin
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:198: P1SKIP |= mask; // Skip Crossbar decoding for this pin
 	mov	a,r3
 	orl	_P1SKIP,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:198: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:199: case 2:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:199: break;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:200: case 2:
 	sjmp	L006005?
 L006003?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:200: P2MDIN &= (~mask); // Set pin as analog input
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:201: P2MDIN &= (~mask); // Set pin as analog input
 	mov	a,r3
 	cpl	a
 	mov	r2,a
 	anl	_P2MDIN,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:201: P2SKIP |= mask; // Skip Crossbar decoding for this pin
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:202: P2SKIP |= mask; // Skip Crossbar decoding for this pin
 	mov	a,r3
 	orl	_P2SKIP,a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:205: }
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:206: }
 L006005?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:206: SFRPAGE = 0x00;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:207: SFRPAGE = 0x00;
 	mov	_SFRPAGE,#0x00
 	ret
 ;------------------------------------------------------------
@@ -834,20 +842,20 @@ L006005?:
 ;------------------------------------------------------------
 ;pin                       Allocated to registers 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:209: unsigned int ADC_at_Pin(unsigned char pin)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:210: unsigned int ADC_at_Pin(unsigned char pin)
 ;	-----------------------------------------
 ;	 function ADC_at_Pin
 ;	-----------------------------------------
 _ADC_at_Pin:
 	mov	_ADC0MX,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:212: ADINT = 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:213: ADINT = 0;
 	clr	_ADINT
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:213: ADBUSY = 1; // Convert voltage at the pin
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:214: ADBUSY = 1; // Convert voltage at the pin
 	setb	_ADBUSY
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:214: while (!ADINT); // Wait for conversion to complete
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:215: while (!ADINT); // Wait for conversion to complete
 L007001?:
 	jnb	_ADINT,L007001?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:215: return (ADC0);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:216: return (ADC0);
 	mov	dpl,_ADC0
 	mov	dph,(_ADC0 >> 8)
 	ret
@@ -856,12 +864,12 @@ L007001?:
 ;------------------------------------------------------------
 ;pin                       Allocated to registers r2 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:218: float Volts_at_Pin(unsigned char pin)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:219: float Volts_at_Pin(unsigned char pin)
 ;	-----------------------------------------
 ;	 function Volts_at_Pin
 ;	-----------------------------------------
 _Volts_at_Pin:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:220: return ((ADC_at_Pin(pin)*VDD)/0b_0011_1111_1111_1111);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:221: return ((ADC_at_Pin(pin)*VDD)/0b_0011_1111_1111_1111);
 	lcall	_ADC_at_Pin
 	lcall	___uint2fs
 	mov	r2,dpl
@@ -909,20 +917,153 @@ _Volts_at_Pin:
 	mov	a,r5
 	ret
 ;------------------------------------------------------------
+;Allocation info for local variables in function 'TIMER0_Init'
+;------------------------------------------------------------
+;------------------------------------------------------------
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:224: void TIMER0_Init(void)
+;	-----------------------------------------
+;	 function TIMER0_Init
+;	-----------------------------------------
+_TIMER0_Init:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:226: CKCON0 |= 0b_0000_0010; // Set Timer0 Clock (T0X2) to 48 clk periods
+	orl	_CKCON0,#0x02
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:227: TMOD &= 0b_1111_0000;	// Set the bits of Timer/Counter 0 to zero
+	anl	_TMOD,#0xF0
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:228: TMOD |= 0b_0000_0010;	// Timer/Counter 0 used as a 8-bit auto-reload timer
+	orl	_TMOD,#0x02
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:230: TL0 = RELOAD_TIMER0; // initial value
+	mov	_TL0,#0xD2
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:231: TH0 = RELOAD_TIMER0; // reload value
+	mov	_TH0,#0xD2
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:233: ET0 = 1; // enable timer 0 interrupt
+	setb	_ET0
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:234: EA = 1;	 // enable global interrupts
+	setb	_EA
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:236: TR0 = 0; // Stop Timer/Counter 0
+	clr	_TR0
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'TIMER2_Init'
+;------------------------------------------------------------
+;------------------------------------------------------------
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:239: void TIMER2_Init(void)
+;	-----------------------------------------
+;	 function TIMER2_Init
+;	-----------------------------------------
+_TIMER2_Init:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:242: TMR2CN0 = 0x00;			// Stop Timer2; Clear TF2;
+	mov	_TMR2CN0,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:243: CKCON0 |= 0b_0001_0000; // Timer 2 uses the system clock
+	orl	_CKCON0,#0x10
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:246: TMR2RL = 29536;
+	mov	_TMR2RL,#0x60
+	mov	(_TMR2RL >> 8),#0x73
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:247: TMR2 = 0xffff; // Set to reload immediately
+	mov	_TMR2,#0xFF
+	mov	(_TMR2 >> 8),#0xFF
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:248: EA = 1;		   // enable global interrupts
+	setb	_EA
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:249: ET2 = 1;	   // Enable Timer2 interrupts
+	setb	_ET2
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:250: TR2 = 0;	   // Start Timer2 (TMR2CN is bit addressable)
+	clr	_TR2
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Timer0_ISR'
+;------------------------------------------------------------
+;------------------------------------------------------------
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:253: void Timer0_ISR(void) interrupt INTERRUPT_TIMER0
+;	-----------------------------------------
+;	 function Timer0_ISR
+;	-----------------------------------------
+_Timer0_ISR:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:256: SFRPAGE = 0x0;
+	mov	_SFRPAGE,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:260: TIMER_OUT_0 = !TIMER_OUT_0;
+	cpl	_P2_0
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:261: TIMER_OUT_0_INVERTED = !TIMER_OUT_0_INVERTED;
+	cpl	_P2_1
+	reti
+;	eliminated unneeded push/pop psw
+;	eliminated unneeded push/pop dpl
+;	eliminated unneeded push/pop dph
+;	eliminated unneeded push/pop b
+;	eliminated unneeded push/pop acc
+;------------------------------------------------------------
+;Allocation info for local variables in function 'Timer2_ISR'
+;------------------------------------------------------------
+;------------------------------------------------------------
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:264: void Timer2_ISR(void) interrupt INTERRUPT_TIMER2
+;	-----------------------------------------
+;	 function Timer2_ISR
+;	-----------------------------------------
+_Timer2_ISR:
+	push	acc
+	push	psw
+	mov	psw,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:266: SFRPAGE = 0x0;
+	mov	_SFRPAGE,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:267: TF2H = 0; // Clear Timer2 interrupt flag
+	clr	_TF2H
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:269: pwm_count++;
+	inc	_pwm_count
+	clr	a
+	cjne	a,_pwm_count,L012009?
+	inc	(_pwm_count + 1)
+L012009?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:270: if (pwm_count == 200)
+	mov	a,#0xC8
+	cjne	a,_pwm_count,L012010?
+	clr	a
+	cjne	a,(_pwm_count + 1),L012010?
+	sjmp	L012011?
+L012010?:
+	sjmp	L012002?
+L012011?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:272: pwm_count = 0;
+	clr	a
+	mov	_pwm_count,a
+	mov	(_pwm_count + 1),a
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:273: TIMER_OUT_2 = 1;
+	setb	_P1_6
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:274: TIMER_OUT_0 = 0;
+	clr	_P2_0
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:275: TIMER_OUT_0_INVERTED = 1;
+	setb	_P2_1
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:276: TR0 = 1;
+	setb	_TR0
+L012002?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:280: if (pwm_count == pulse_width)
+	mov	a,_pulse_width
+	cjne	a,_pwm_count,L012005?
+	mov	a,(_pulse_width + 1)
+	cjne	a,(_pwm_count + 1),L012005?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:282: TIMER_OUT_2 = 0;
+	clr	_P1_6
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:283: TR0 = 0;
+	clr	_TR0
+L012005?:
+	pop	psw
+	pop	acc
+	reti
+;	eliminated unneeded push/pop dpl
+;	eliminated unneeded push/pop dph
+;	eliminated unneeded push/pop b
+;------------------------------------------------------------
 ;Allocation info for local variables in function 'LCD_pulse'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:287: void LCD_pulse(void)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:288: void LCD_pulse(void)
 ;	-----------------------------------------
 ;	 function LCD_pulse
 ;	-----------------------------------------
 _LCD_pulse:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:289: LCD_E = 1;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:290: LCD_E = 1;
 	setb	_P2_5
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:290: Timer3us(40);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:291: Timer3us(40);
 	mov	dpl,#0x28
 	lcall	_Timer3us
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:291: LCD_E = 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:292: LCD_E = 0;
 	clr	_P2_5
 	ret
 ;------------------------------------------------------------
@@ -930,66 +1071,66 @@ _LCD_pulse:
 ;------------------------------------------------------------
 ;x                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:294: void LCD_byte(unsigned char x)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:295: void LCD_byte(unsigned char x)
 ;	-----------------------------------------
 ;	 function LCD_byte
 ;	-----------------------------------------
 _LCD_byte:
 	mov	r2,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:297: ACC = x; // Send high nible
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:298: ACC = x; // Send high nible
 	mov	_ACC,r2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:298: LCD_D7 = ACC_7;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:299: LCD_D7 = ACC_7;
 	mov	c,_ACC_7
 	mov	_P2_1,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:299: LCD_D6 = ACC_6;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:300: LCD_D6 = ACC_6;
 	mov	c,_ACC_6
 	mov	_P2_2,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:300: LCD_D5 = ACC_5;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:301: LCD_D5 = ACC_5;
 	mov	c,_ACC_5
 	mov	_P2_3,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:301: LCD_D4 = ACC_4;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:302: LCD_D4 = ACC_4;
 	mov	c,_ACC_4
 	mov	_P2_4,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:302: LCD_pulse();
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:303: LCD_pulse();
 	push	ar2
 	lcall	_LCD_pulse
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:303: Timer3us(40);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:304: Timer3us(40);
 	mov	dpl,#0x28
 	lcall	_Timer3us
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:304: ACC = x; // Send low nible
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:305: ACC = x; // Send low nible
 	mov	_ACC,r2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:305: LCD_D7 = ACC_3;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:306: LCD_D7 = ACC_3;
 	mov	c,_ACC_3
 	mov	_P2_1,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:306: LCD_D6 = ACC_2;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:307: LCD_D6 = ACC_2;
 	mov	c,_ACC_2
 	mov	_P2_2,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:307: LCD_D5 = ACC_1;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:308: LCD_D5 = ACC_1;
 	mov	c,_ACC_1
 	mov	_P2_3,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:308: LCD_D4 = ACC_0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:309: LCD_D4 = ACC_0;
 	mov	c,_ACC_0
 	mov	_P2_4,c
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:309: LCD_pulse();
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:310: LCD_pulse();
 	ljmp	_LCD_pulse
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'WriteData'
 ;------------------------------------------------------------
 ;x                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:312: void WriteData(unsigned char x)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:313: void WriteData(unsigned char x)
 ;	-----------------------------------------
 ;	 function WriteData
 ;	-----------------------------------------
 _WriteData:
 	mov	r2,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:314: LCD_RS = 1;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:315: LCD_RS = 1;
 	setb	_P2_6
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:315: LCD_byte(x);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:316: LCD_byte(x);
 	mov	dpl,r2
 	lcall	_LCD_byte
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:316: waitms(2);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:317: waitms(2);
 	mov	dptr,#0x0002
 	ljmp	_waitms
 ;------------------------------------------------------------
@@ -997,53 +1138,53 @@ _WriteData:
 ;------------------------------------------------------------
 ;x                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:319: void WriteCommand(unsigned char x)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:320: void WriteCommand(unsigned char x)
 ;	-----------------------------------------
 ;	 function WriteCommand
 ;	-----------------------------------------
 _WriteCommand:
 	mov	r2,dpl
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:321: LCD_RS = 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:322: LCD_RS = 0;
 	clr	_P2_6
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:322: LCD_byte(x);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:323: LCD_byte(x);
 	mov	dpl,r2
 	lcall	_LCD_byte
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:323: waitms(5);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:324: waitms(5);
 	mov	dptr,#0x0005
 	ljmp	_waitms
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'LCD_4BIT'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:326: void LCD_4BIT(void)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:327: void LCD_4BIT(void)
 ;	-----------------------------------------
 ;	 function LCD_4BIT
 ;	-----------------------------------------
 _LCD_4BIT:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:328: LCD_E = 0; // Resting state of LCD's enable is zero
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:329: LCD_E = 0; // Resting state of LCD's enable is zero
 	clr	_P2_5
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:330: waitms(20);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:331: waitms(20);
 	mov	dptr,#0x0014
 	lcall	_waitms
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:332: WriteCommand(0x33);
-	mov	dpl,#0x33
-	lcall	_WriteCommand
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:333: WriteCommand(0x33);
 	mov	dpl,#0x33
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:334: WriteCommand(0x32); // Change to 4-bit mode
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:334: WriteCommand(0x33);
+	mov	dpl,#0x33
+	lcall	_WriteCommand
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:335: WriteCommand(0x32); // Change to 4-bit mode
 	mov	dpl,#0x32
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:337: WriteCommand(0x28);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:338: WriteCommand(0x28);
 	mov	dpl,#0x28
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:338: WriteCommand(0x0c);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:339: WriteCommand(0x0c);
 	mov	dpl,#0x0C
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:339: WriteCommand(0x01); // Clear screen command (takes some time)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:340: WriteCommand(0x01); // Clear screen command (takes some time)
 	mov	dpl,#0x01
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:340: waitms(20);			// Wait for clear screen command to finsih.
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:341: waitms(20);			// Wait for clear screen command to finsih.
 	mov	dptr,#0x0014
 	ljmp	_waitms
 ;------------------------------------------------------------
@@ -1053,7 +1194,7 @@ _LCD_4BIT:
 ;string                    Allocated to registers r2 r3 r4 
 ;j                         Allocated to registers r5 r6 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:343: void LCDprint(char *string, unsigned char line, bit clear)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:344: void LCDprint(char *string, unsigned char line, bit clear)
 ;	-----------------------------------------
 ;	 function LCDprint
 ;	-----------------------------------------
@@ -1061,29 +1202,29 @@ _LCDprint:
 	mov	r2,dpl
 	mov	r3,dph
 	mov	r4,b
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:347: WriteCommand(line == 2 ? 0xc0 : 0x80);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:348: WriteCommand(line == 2 ? 0xc0 : 0x80);
 	mov	a,#0x02
-	cjne	a,_LCDprint_PARM_2,L014013?
+	cjne	a,_LCDprint_PARM_2,L018013?
 	mov	r5,#0xC0
-	sjmp	L014014?
-L014013?:
+	sjmp	L018014?
+L018013?:
 	mov	r5,#0x80
-L014014?:
+L018014?:
 	mov	dpl,r5
 	push	ar2
 	push	ar3
 	push	ar4
 	lcall	_WriteCommand
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:348: waitms(5);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:349: waitms(5);
 	mov	dptr,#0x0005
 	lcall	_waitms
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:349: for (j = 0; string[j] != 0; j++)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:350: for (j = 0; string[j] != 0; j++)
 	mov	r5,#0x00
 	mov	r6,#0x00
-L014003?:
+L018003?:
 	mov	a,r5
 	add	a,r2
 	mov	r7,a
@@ -1096,8 +1237,8 @@ L014003?:
 	mov	b,r1
 	lcall	__gptrget
 	mov	r7,a
-	jz	L014006?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:350: WriteData(string[j]); // Write the message
+	jz	L018006?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:351: WriteData(string[j]); // Write the message
 	mov	dpl,r7
 	push	ar2
 	push	ar3
@@ -1110,57 +1251,57 @@ L014003?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:349: for (j = 0; string[j] != 0; j++)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:350: for (j = 0; string[j] != 0; j++)
 	inc	r5
-	cjne	r5,#0x00,L014003?
+	cjne	r5,#0x00,L018003?
 	inc	r6
-	sjmp	L014003?
-L014006?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:351: if (clear)
-	jnb	_LCDprint_PARM_3,L014011?
+	sjmp	L018003?
+L018006?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:352: if (clear)
+	jnb	_LCDprint_PARM_3,L018011?
 	mov	ar2,r5
 	mov	ar3,r6
-L014007?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:352: for (; j < CHARS_PER_LINE; j++)
+L018007?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:353: for (; j < CHARS_PER_LINE; j++)
 	clr	c
 	mov	a,r2
 	subb	a,#0x10
 	mov	a,r3
 	xrl	a,#0x80
 	subb	a,#0x80
-	jnc	L014011?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:353: WriteData(' '); // Clear the rest of the line
+	jnc	L018011?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:354: WriteData(' '); // Clear the rest of the line
 	mov	dpl,#0x20
 	push	ar2
 	push	ar3
 	lcall	_WriteData
 	pop	ar3
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:352: for (; j < CHARS_PER_LINE; j++)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:353: for (; j < CHARS_PER_LINE; j++)
 	inc	r2
-	cjne	r2,#0x00,L014007?
+	cjne	r2,#0x00,L018007?
 	inc	r3
-	sjmp	L014007?
-L014011?:
+	sjmp	L018007?
+L018011?:
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'getsn'
 ;------------------------------------------------------------
 ;len                       Allocated with name '_getsn_PARM_2'
-;buff                      Allocated with name '_getsn_buff_1_71'
+;buff                      Allocated with name '_getsn_buff_1_81'
 ;j                         Allocated with name '_getsn_sloc0_1_0'
 ;c                         Allocated to registers r3 
 ;sloc0                     Allocated with name '_getsn_sloc0_1_0'
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:356: int getsn(char *buff, int len)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:357: int getsn(char *buff, int len)
 ;	-----------------------------------------
 ;	 function getsn
 ;	-----------------------------------------
 _getsn:
-	mov	_getsn_buff_1_71,dpl
-	mov	(_getsn_buff_1_71 + 1),dph
-	mov	(_getsn_buff_1_71 + 2),b
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:361: for (j = 0; j < (len - 1); j++)
+	mov	_getsn_buff_1_81,dpl
+	mov	(_getsn_buff_1_81 + 1),dph
+	mov	(_getsn_buff_1_81 + 2),b
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:362: for (j = 0; j < (len - 1); j++)
 	clr	a
 	mov	_getsn_sloc0_1_0,a
 	mov	(_getsn_sloc0_1_0 + 1),a
@@ -1172,7 +1313,7 @@ _getsn:
 	mov	r0,a
 	mov	r1,#0x00
 	mov	r2,#0x00
-L015005?:
+L019005?:
 	clr	c
 	mov	a,r1
 	subb	a,r7
@@ -1181,8 +1322,8 @@ L015005?:
 	mov	b,r0
 	xrl	b,#0x80
 	subb	a,b
-	jnc	L015008?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:363: c = getchar();
+	jnc	L019008?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:364: c = getchar();
 	push	ar2
 	push	ar7
 	push	ar0
@@ -1193,66 +1334,66 @@ L015005?:
 	pop	ar0
 	pop	ar7
 	pop	ar2
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:364: if ((c == '\n') || (c == '\r'))
-	cjne	r3,#0x0A,L015015?
-	sjmp	L015001?
-L015015?:
-	cjne	r3,#0x0D,L015002?
-L015001?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:366: buff[j] = 0;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:365: if ((c == '\n') || (c == '\r'))
+	cjne	r3,#0x0A,L019015?
+	sjmp	L019001?
+L019015?:
+	cjne	r3,#0x0D,L019002?
+L019001?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:367: buff[j] = 0;
 	mov	a,_getsn_sloc0_1_0
-	add	a,_getsn_buff_1_71
+	add	a,_getsn_buff_1_81
 	mov	r4,a
 	mov	a,(_getsn_sloc0_1_0 + 1)
-	addc	a,(_getsn_buff_1_71 + 1)
+	addc	a,(_getsn_buff_1_81 + 1)
 	mov	r5,a
-	mov	r6,(_getsn_buff_1_71 + 2)
+	mov	r6,(_getsn_buff_1_81 + 2)
 	mov	dpl,r4
 	mov	dph,r5
 	mov	b,r6
 	clr	a
 	lcall	__gptrput
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:367: return j;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:368: return j;
 	mov	dpl,_getsn_sloc0_1_0
 	mov	dph,(_getsn_sloc0_1_0 + 1)
 	ret
-L015002?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:371: buff[j] = c;
+L019002?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:372: buff[j] = c;
 	mov	a,r1
-	add	a,_getsn_buff_1_71
+	add	a,_getsn_buff_1_81
 	mov	r4,a
 	mov	a,r2
-	addc	a,(_getsn_buff_1_71 + 1)
+	addc	a,(_getsn_buff_1_81 + 1)
 	mov	r5,a
-	mov	r6,(_getsn_buff_1_71 + 2)
+	mov	r6,(_getsn_buff_1_81 + 2)
 	mov	dpl,r4
 	mov	dph,r5
 	mov	b,r6
 	mov	a,r3
 	lcall	__gptrput
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:361: for (j = 0; j < (len - 1); j++)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:362: for (j = 0; j < (len - 1); j++)
 	inc	r1
-	cjne	r1,#0x00,L015018?
+	cjne	r1,#0x00,L019018?
 	inc	r2
-L015018?:
+L019018?:
 	mov	_getsn_sloc0_1_0,r1
 	mov	(_getsn_sloc0_1_0 + 1),r2
-	sjmp	L015005?
-L015008?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:374: buff[j] = 0;
+	sjmp	L019005?
+L019008?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:375: buff[j] = 0;
 	mov	a,_getsn_sloc0_1_0
-	add	a,_getsn_buff_1_71
+	add	a,_getsn_buff_1_81
 	mov	r2,a
 	mov	a,(_getsn_sloc0_1_0 + 1)
-	addc	a,(_getsn_buff_1_71 + 1)
+	addc	a,(_getsn_buff_1_81 + 1)
 	mov	r3,a
-	mov	r4,(_getsn_buff_1_71 + 2)
+	mov	r4,(_getsn_buff_1_81 + 2)
 	mov	dpl,r2
 	mov	dph,r3
 	mov	b,r4
 	clr	a
 	lcall	__gptrput
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:375: return len;
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:376: return len;
 	mov	dpl,_getsn_PARM_2
 	mov	dph,(_getsn_PARM_2 + 1)
 	ret
@@ -1261,12 +1402,11 @@ L015008?:
 ;------------------------------------------------------------
 ;x                         Allocated to registers r4 r5 
 ;y                         Allocated to registers r6 r7 
-;NS_Volt                   Allocated with name '_main_NS_Volt_1_77'
-;EW_Volt                   Allocated with name '_main_EW_Volt_1_77'
-;B_Volt                    Allocated to registers 
+;NS_Volt                   Allocated with name '_main_NS_Volt_1_87'
+;EW_Volt                   Allocated with name '_main_EW_Volt_1_87'
 ;beacon                    Allocated to registers r2 r3 
 ;------------------------------------------------------------
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:378: void main(void)
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:379: void main(void)
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
@@ -1274,11 +1414,19 @@ _main:
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:385: int beacon = 1;
 	mov	r2,#0x01
 	mov	r3,#0x00
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:387: TIMER_OUT_0 = 0;
+	clr	_P2_0
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:388: TIMER_OUT_0_INVERTED = 1;
+	setb	_P2_1
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:390: waitms(500); // Give PuTTY a chance to start.
 	mov	dptr,#0x01F4
 	push	ar2
 	push	ar3
 	lcall	_waitms
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:391: TIMER0_Init();
+	lcall	_TIMER0_Init
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:392: TIMER2_Init();
+	lcall	_TIMER2_Init
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:394: printf("\x1b[2J"); // Clear screen using ANSI escape sequence.
 	mov	a,#__str_0
 	push	acc
@@ -1320,6 +1468,10 @@ _main:
 	mov	a,sp
 	add	a,#0xf4
 	mov	sp,a
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:402: LCD_4BIT();
+	lcall	_LCD_4BIT
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:403: TR2 = 1; // Start Timer2
+	setb	_TR2
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:405: InitPinADC(1, 1); // Configure P1.1 as North/South analog input
 	mov	_InitPinADC_PARM_2,#0x01
 	mov	dpl,#0x01
@@ -1333,38 +1485,35 @@ _main:
 	pop	ar3
 	pop	ar2
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:409: while (1)
-L016032?:
+L020032?:
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:413: NS_Volt = Volts_at_Pin(QFP32_MUX_P1_1); // North/South Voltage
 	mov	dpl,#0x07
 	push	ar2
 	push	ar3
 	lcall	_Volts_at_Pin
-	mov	_main_NS_Volt_1_77,dpl
-	mov	(_main_NS_Volt_1_77 + 1),dph
-	mov	(_main_NS_Volt_1_77 + 2),b
-	mov	(_main_NS_Volt_1_77 + 3),a
+	mov	_main_NS_Volt_1_87,dpl
+	mov	(_main_NS_Volt_1_87 + 1),dph
+	mov	(_main_NS_Volt_1_87 + 2),b
+	mov	(_main_NS_Volt_1_87 + 3),a
 ;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:414: EW_Volt = Volts_at_Pin(QFP32_MUX_P1_2); // East/West Voltage
 	mov	dpl,#0x08
 	lcall	_Volts_at_Pin
-	mov	_main_EW_Volt_1_77,dpl
-	mov	(_main_EW_Volt_1_77 + 1),dph
-	mov	(_main_EW_Volt_1_77 + 2),b
-	mov	(_main_EW_Volt_1_77 + 3),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:415: B_Volt = Volts_at_Pin(QFP32_MUX_P1_3); // Beacon Voltage
-	mov	dpl,#0x09
-	lcall	_Volts_at_Pin
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:418: if(NS_Volt < 1.5){
-	clr	a
+	mov	_main_EW_Volt_1_87,dpl
+	mov	(_main_EW_Volt_1_87 + 1),dph
+	mov	(_main_EW_Volt_1_87 + 2),b
+	mov	(_main_EW_Volt_1_87 + 3),a
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:417: if(NS_Volt < 1.9){
+	mov	a,#0x33
 	push	acc
 	push	acc
-	mov	a,#0xC0
+	mov	a,#0xF3
 	push	acc
 	mov	a,#0x3F
 	push	acc
-	mov	dpl,_main_NS_Volt_1_77
-	mov	dph,(_main_NS_Volt_1_77 + 1)
-	mov	b,(_main_NS_Volt_1_77 + 2)
-	mov	a,(_main_NS_Volt_1_77 + 3)
+	mov	dpl,_main_NS_Volt_1_87
+	mov	dph,(_main_NS_Volt_1_87 + 1)
+	mov	b,(_main_NS_Volt_1_87 + 2)
+	mov	a,(_main_NS_Volt_1_87 + 3)
 	lcall	___fslt
 	mov	r6,dpl
 	mov	a,sp
@@ -1373,11 +1522,11 @@ L016032?:
 	pop	ar3
 	pop	ar2
 	mov	a,r6
-	jz	L016005?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:419: y = 2;
+	jz	L020005?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:418: y = 2;
 	mov	r6,#0x02
 	mov	r7,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:420: printf("y = %d\n", y);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:419: printf("y = %d\n", y);
 	push	ar2
 	push	ar3
 	push	ar6
@@ -1400,22 +1549,23 @@ L016032?:
 	pop	ar6
 	pop	ar3
 	pop	ar2
-	ljmp	L016006?
-L016005?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:422: else if(NS_Volt > 2.6){
+	ljmp	L020006?
+L020005?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:421: else if(NS_Volt > 2.7){
 	push	ar2
 	push	ar3
-	mov	a,#0x66
+	mov	a,#0xCD
 	push	acc
+	mov	a,#0xCC
 	push	acc
-	mov	a,#0x26
+	mov	a,#0x2C
 	push	acc
 	mov	a,#0x40
 	push	acc
-	mov	dpl,_main_NS_Volt_1_77
-	mov	dph,(_main_NS_Volt_1_77 + 1)
-	mov	b,(_main_NS_Volt_1_77 + 2)
-	mov	a,(_main_NS_Volt_1_77 + 3)
+	mov	dpl,_main_NS_Volt_1_87
+	mov	dph,(_main_NS_Volt_1_87 + 1)
+	mov	b,(_main_NS_Volt_1_87 + 2)
+	mov	a,(_main_NS_Volt_1_87 + 3)
 	lcall	___fsgt
 	mov	r4,dpl
 	mov	a,sp
@@ -1424,11 +1574,11 @@ L016005?:
 	pop	ar3
 	pop	ar2
 	mov	a,r4
-	jz	L016002?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:423: y = 0;
+	jz	L020002?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:422: y = 0;
 	mov	r6,#0x00
 	mov	r7,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:424: printf("y = %d\n", y);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:423: printf("y = %d\n", y);
 	push	ar2
 	push	ar3
 	push	ar6
@@ -1450,12 +1600,12 @@ L016005?:
 	pop	ar6
 	pop	ar3
 	pop	ar2
-	sjmp	L016006?
-L016002?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:427: y = 1;
+	sjmp	L020006?
+L020002?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:426: y = 1;
 	mov	r6,#0x01
 	mov	r7,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:428: printf("y = %d\n", y);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:427: printf("y = %d\n", y);
 	push	ar2
 	push	ar3
 	push	ar6
@@ -1478,23 +1628,23 @@ L016002?:
 	pop	ar6
 	pop	ar3
 	pop	ar2
-L016006?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:432: if(EW_Volt < 1.5){
+L020006?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:431: if(EW_Volt < 1.9){
 	push	ar2
 	push	ar3
 	push	ar6
 	push	ar7
-	clr	a
+	mov	a,#0x33
 	push	acc
 	push	acc
-	mov	a,#0xC0
+	mov	a,#0xF3
 	push	acc
 	mov	a,#0x3F
 	push	acc
-	mov	dpl,_main_EW_Volt_1_77
-	mov	dph,(_main_EW_Volt_1_77 + 1)
-	mov	b,(_main_EW_Volt_1_77 + 2)
-	mov	a,(_main_EW_Volt_1_77 + 3)
+	mov	dpl,_main_EW_Volt_1_87
+	mov	dph,(_main_EW_Volt_1_87 + 1)
+	mov	b,(_main_EW_Volt_1_87 + 2)
+	mov	a,(_main_EW_Volt_1_87 + 3)
 	lcall	___fslt
 	mov	r4,dpl
 	mov	a,sp
@@ -1505,11 +1655,11 @@ L016006?:
 	pop	ar3
 	pop	ar2
 	mov	a,r4
-	jz	L016011?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:433: x = 0;
+	jz	L020011?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:432: x = 0;
 	mov	r4,#0x00
 	mov	r5,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:434: printf("x = %d\n", x);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:433: printf("x = %d\n", x);
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1535,24 +1685,25 @@ L016006?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-	ljmp	L016012?
-L016011?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:436: else if(EW_Volt > 2.6){
+	ljmp	L020012?
+L020011?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:435: else if(EW_Volt > 2.7){
 	push	ar2
 	push	ar3
 	push	ar6
 	push	ar7
-	mov	a,#0x66
+	mov	a,#0xCD
 	push	acc
+	mov	a,#0xCC
 	push	acc
-	mov	a,#0x26
+	mov	a,#0x2C
 	push	acc
 	mov	a,#0x40
 	push	acc
-	mov	dpl,_main_EW_Volt_1_77
-	mov	dph,(_main_EW_Volt_1_77 + 1)
-	mov	b,(_main_EW_Volt_1_77 + 2)
-	mov	a,(_main_EW_Volt_1_77 + 3)
+	mov	dpl,_main_EW_Volt_1_87
+	mov	dph,(_main_EW_Volt_1_87 + 1)
+	mov	b,(_main_EW_Volt_1_87 + 2)
+	mov	a,(_main_EW_Volt_1_87 + 3)
 	lcall	___fsgt
 	mov	r0,dpl
 	mov	a,sp
@@ -1563,11 +1714,11 @@ L016011?:
 	pop	ar3
 	pop	ar2
 	mov	a,r0
-	jz	L016008?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:437: x = 2;
+	jz	L020008?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:436: x = 2;
 	mov	r4,#0x02
 	mov	r5,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:438: printf("x = %d\n", x);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:437: printf("x = %d\n", x);
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1594,12 +1745,12 @@ L016011?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-	sjmp	L016012?
-L016008?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:441: x = 1;
+	sjmp	L020012?
+L020008?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:440: x = 1;
 	mov	r4,#0x01
 	mov	r5,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:442: printf("x = %d\n", x);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:441: printf("x = %d\n", x);
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1626,22 +1777,22 @@ L016008?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-L016012?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:446: if(Bpin){
-	jnb	_P1_3,L016017?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:447: while(Bpin);
-L016013?:
-	jb	_P1_3,L016013?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:448: beacon = !beacon;
+L020012?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:445: if(Bpin){
+	jnb	_P1_3,L020017?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:446: while(Bpin);
+L020013?:
+	jb	_P1_3,L020013?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:447: beacon = !beacon;
 	mov	a,r2
 	orl	a,r3
-	cjne	a,#0x01,L016058?
-L016058?:
+	cjne	a,#0x01,L020058?
+L020058?:
 	clr	a
 	rlc	a
 	mov	r2,a
 	mov	r3,#0x00
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:449: printf("Beacon Toggled: %d", beacon);
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:448: printf("Beacon Toggled: %d", beacon);
 	push	ar2
 	push	ar3
 	push	ar4
@@ -1666,18 +1817,22 @@ L016058?:
 	pop	ar4
 	pop	ar3
 	pop	ar2
-L016017?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:453: if(beacon){
+L020017?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:452: if(beacon){
 	mov	a,r2
 	orl	a,r3
-	jz	L016029?
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:454: pulse_width = 200; // 100%
+	jz	L020029?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:453: pulse_width = 200; // 100%
 	mov	_pulse_width,#0xC8
 	clr	a
 	mov	(_pulse_width + 1),a
-	ljmp	L016030?
-L016029?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:457: switch (y*10+x){ // y*10+x
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:454: LEDpin = 0; // LED on
+	clr	_P1_4
+	ljmp	L020032?
+L020029?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:457: LEDpin = 1; // LED off
+	setb	_P1_4
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:458: switch (y*10+x){ // y*10+x
 	mov	__mulint_PARM_2,r6
 	mov	(__mulint_PARM_2 + 1),r7
 	mov	dptr,#0x000A
@@ -1697,117 +1852,109 @@ L016029?:
 	mov	a,r5
 	addc	a,b
 	mov	r5,a
-	cjne	r4,#0x00,L016060?
-	cjne	r5,#0x00,L016060?
-	sjmp	L016023?
-L016060?:
-	cjne	r4,#0x01,L016061?
-	cjne	r5,#0x00,L016061?
-	sjmp	L016022?
-L016061?:
-	cjne	r4,#0x02,L016062?
-	cjne	r5,#0x00,L016062?
-	sjmp	L016021?
-L016062?:
-	cjne	r4,#0x0A,L016063?
-	cjne	r5,#0x00,L016063?
-	sjmp	L016024?
-L016063?:
-	cjne	r4,#0x0C,L016064?
-	cjne	r5,#0x00,L016064?
-	sjmp	L016020?
-L016064?:
-	cjne	r4,#0x14,L016065?
-	cjne	r5,#0x00,L016065?
-	sjmp	L016025?
-L016065?:
-	cjne	r4,#0x15,L016066?
-	cjne	r5,#0x00,L016066?
-	sjmp	L016018?
-L016066?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:459: case N:
-	cjne	r4,#0x16,L016026?
-	cjne	r5,#0x00,L016026?
-	sjmp	L016019?
-L016018?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:460: pulse_width = 180; // 90%
+	cjne	r4,#0x00,L020060?
+	cjne	r5,#0x00,L020060?
+	sjmp	L020023?
+L020060?:
+	cjne	r4,#0x01,L020061?
+	cjne	r5,#0x00,L020061?
+	sjmp	L020022?
+L020061?:
+	cjne	r4,#0x02,L020062?
+	cjne	r5,#0x00,L020062?
+	sjmp	L020021?
+L020062?:
+	cjne	r4,#0x0A,L020063?
+	cjne	r5,#0x00,L020063?
+	sjmp	L020024?
+L020063?:
+	cjne	r4,#0x0C,L020064?
+	cjne	r5,#0x00,L020064?
+	sjmp	L020020?
+L020064?:
+	cjne	r4,#0x14,L020065?
+	cjne	r5,#0x00,L020065?
+	sjmp	L020025?
+L020065?:
+	cjne	r4,#0x15,L020066?
+	cjne	r5,#0x00,L020066?
+	sjmp	L020018?
+L020066?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:460: case N:
+	cjne	r4,#0x16,L020026?
+	cjne	r5,#0x00,L020026?
+	sjmp	L020019?
+L020018?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:461: pulse_width = 180; // 90%
 	mov	_pulse_width,#0xB4
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:461: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:463: case NE:
-	sjmp	L016030?
-L016019?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:464: pulse_width = 160; // 80%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:462: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:464: case NE:
+L020019?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:465: pulse_width = 160; // 80%
 	mov	_pulse_width,#0xA0
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:465: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:467: case E:
-	sjmp	L016030?
-L016020?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:468: pulse_width = 140; // 70%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:466: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:468: case E:
+L020020?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:469: pulse_width = 140; // 70%
 	mov	_pulse_width,#0x8C
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:469: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:471: case SE:
-	sjmp	L016030?
-L016021?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:472: pulse_width = 120; // 60%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:470: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:472: case SE:
+L020021?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:473: pulse_width = 120; // 60%
 	mov	_pulse_width,#0x78
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:473: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:475: case S:
-	sjmp	L016030?
-L016022?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:476: pulse_width = 100; // 50%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:474: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:476: case S:
+L020022?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:477: pulse_width = 100; // 50%
 	mov	_pulse_width,#0x64
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:477: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:479: case SW:
-	sjmp	L016030?
-L016023?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:480: pulse_width = 80; // 40%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:478: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:480: case SW:
+L020023?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:481: pulse_width = 80; // 40%
 	mov	_pulse_width,#0x50
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:481: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:483: case W:
-	sjmp	L016030?
-L016024?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:484: pulse_width = 60; // 30%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:482: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:484: case W:
+L020024?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:485: pulse_width = 60; // 30%
 	mov	_pulse_width,#0x3C
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:485: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:487: case NW:
-	sjmp	L016030?
-L016025?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:488: pulse_width = 40; // 20%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:486: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:488: case NW:
+L020025?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:489: pulse_width = 40; // 20%
 	mov	_pulse_width,#0x28
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:489: break;
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:491: default: // Waiting
-	sjmp	L016030?
-L016026?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:492: pulse_width = 20; // 10%
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:490: break;
+	ljmp	L020032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:492: default: // Waiting
+L020026?:
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:493: pulse_width = 20; // 10%
 	mov	_pulse_width,#0x14
 	clr	a
 	mov	(_pulse_width + 1),a
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:493: }
-L016030?:
-;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:495: waitms(500);
-	mov	dptr,#0x01F4
-	push	ar2
-	push	ar3
-	lcall	_waitms
-	pop	ar3
-	pop	ar2
-	ljmp	L016032?
+;	C:\Users\natha\Downloads\UBC\Year_2\Term_2\ELEC291\Project 2\Project-2-Tracking-Robot\doc\remote.c:494: }
+	ljmp	L020032?
 	rseg R_CSEG
 
 	rseg R_XINIT
@@ -1855,7 +2002,7 @@ __str_3:
 	db 'Mar 28 2023'
 	db 0x00
 __str_4:
-	db '15:22:20'
+	db '15:53:08'
 	db 0x00
 __str_5:
 	db 'y = %d'
