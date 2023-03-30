@@ -34,6 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+// #define DEBUGGING
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,6 +47,7 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 DMA_HandleTypeDef hdma_tim3_ch4_up;
@@ -57,8 +59,9 @@ uint8_t WS2812Buffer[24 * LED_COUNT] = {0};
 uint16_t ADCBuffer[100];
 char StringBuffer[100];
 unsigned short LEDStep = 0;
-unsigned int TIM4Duty;
+unsigned int TIM4Pulse;
 unsigned int TIM4Period;
+int Mode = 0; // 0 = track, 1 = controlled
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,6 +73,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void SetColor(unsigned int index, unsigned short r, unsigned short g, unsigned short b);
 void SetColorAll(unsigned short r, unsigned short g, unsigned short b);
@@ -117,61 +121,68 @@ int main(void)
     MX_TIM4_Init();
     MX_TIM3_Init();
     MX_TIM1_Init();
+    MX_TIM2_Init();
     /* USER CODE BEGIN 2 */
     HAL_ADC_Start_DMA(&hadc1, ADCBuffer, ARRAYLEN(ADCBuffer));
 
-    LEFTFORWARD();
+    LEFTSTOP();
     RIGHTSTOP();
 
     SetColorAll(0, 0, 0);
-    // SetColor(0, 10, 0, 0);
-    // SetColor(2, 10, 0, 0);
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        LEFTREVERSE();
-        RIGHTREVERSE();
-        SetColor(0, 10, 10, 10);
-        SetColor(1, 10, 10, 10);
+        // HAL_Delay(100);
+        // sprintf(StringBuffer, "%4d %4d\r\n", LEFTADC, RIGHTADC);
+        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+        switch (Mode)
+        {
+        case 0: // tracking mode
+#ifdef DEBUGGING
+            sprintf(StringBuffer, "%4d %4d\r\n", LEFTADC, RIGHTADC);
+            HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+#endif
+            if (LEFTADC < TARGETADC - DEADZONE)
+            {
+                LEFTFORWARD();
+            }
+            else if (LEFTADC > TARGETADC + DEADZONE)
+            {
+                LEFTREVERSE();
+            }
+            else
+            {
+                LEFTSTOP();
+            }
 
-        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        HAL_Delay(1000);
-
-        LEFTFORWARD();
-        RIGHTFORWARD();
-        SetColor(0, 0, 0, 0);
-        SetColor(1, 0, 0, 0);
-
-        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        HAL_Delay(1000);
-
-        LEFTSTOP();
-        RIGHTSTOP();
-        SetColor(0, 30, 0, 0);
-        SetColor(1, 30, 0, 0);
-
-        sprintf(StringBuffer, "%d %d\r\n", ADCBuffer[0], ADCBuffer[1]);
-        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        HAL_Delay(1000);
-
-        sprintf(StringBuffer, "f:%dHz duty:%d%%\r\n", (int)(10000.0 / TIM4Period), (int)(100.0 * TIM4Duty / TIM4Period));
-        HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-
-        // emergency lights
-        // SetColor(0, 30, 10, 0);
-        // SetColor(1, 30, 10, 0);
-        // HAL_Delay(500);
-        // SetColor(0, 0, 0, 0);
-        // SetColor(1, 0, 0, 0);
-        // HAL_Delay(500);
+            if (RIGHTADC < TARGETADC - DEADZONE)
+            {
+                RIGHTFORWARD();
+            }
+            else if (RIGHTADC > TARGETADC + DEADZONE)
+            {
+                RIGHTREVERSE();
+            }
+            else
+            {
+                RIGHTSTOP();
+            }
+            break;
+        case 1: // controlled mode
+#ifdef DEBUGGING
+            sprintf(StringBuffer, "%4d %4d\r\n", TIM4Pulse, TIM4Period);
+            HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+#endif
+            if (TIM4Pulse < 100)
+            {
+            }
+            break;
+        default:
+            break;
+        }
 
         /* USER CODE END WHILE */
 
@@ -326,6 +337,50 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+ * @brief TIM2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM2_Init(void)
+{
+
+    /* USER CODE BEGIN TIM2_Init 0 */
+
+    /* USER CODE END TIM2_Init 0 */
+
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    /* USER CODE BEGIN TIM2_Init 1 */
+
+    /* USER CODE END TIM2_Init 1 */
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 7200 - 1;
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim2.Init.Period = 10000 - 1;
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN TIM2_Init 2 */
+    HAL_TIM_Base_Start_IT(&htim2);
+    /* USER CODE END TIM2_Init 2 */
+}
+
+/**
  * @brief TIM3 Initialization Function
  * @param None
  * @retval None
@@ -442,7 +497,7 @@ static void MX_TIM4_Init(void)
         Error_Handler();
     }
     /* USER CODE BEGIN TIM4_Init 2 */
-    HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_1);
+    HAL_TIM_IC_Start(&htim4, TIM_CHANNEL_1);
     HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);
     /* USER CODE END TIM4_Init 2 */
 }
@@ -605,10 +660,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         LEDStep += 2;
         // Rainbow(10, LEDStep / 255.0, 0.05);
         SetColor(2,
-                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
-                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
-                 (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
+                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
+                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
+                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
         HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)WS2812Buffer, ARRAYLEN(WS2812Buffer));
+    }
+    if (htim == &htim2)
+    {
+#ifdef DEBUGGING
+        // sprintf(StringBuffer, "tim2 overflows\r\n");
+        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+#endif
+        Mode = 0;
     }
     // if (htim == &htim4)
     // {
@@ -622,13 +685,16 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
     if (htim == &htim4)
     {
-        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1) // falling edge
-        {
-            TIM4Duty = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_1);
-        }
         if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) // rising edge
         {
+            TIM4Pulse = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_1);
             TIM4Period = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_2);
+#ifdef DEBUGGING
+            sprintf(StringBuffer, "tim4 ch2 %4d %4d\r\n", TIM4Pulse, TIM4Period);
+            HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+#endif
+            Mode = 1;
+            __HAL_TIM_SetCounter(&htim2, 0);
         }
     }
 }

@@ -77,6 +77,8 @@ void Error_Handler(void);
 #define RIGHT_MOTOR_A_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#define TARGETADC 100
+#define DEADZONE 10
 #define WS2812_HIGH_BIT 60
 #define WS2812_LOW_BIT 30
 #define LED_COUNT 3
@@ -88,6 +90,9 @@ void Error_Handler(void);
 #define RIGHTFORWARD() RightMotor(0, 1);
 #define RIGHTREVERSE() RightMotor(1, 0);
 #define RIGHTSTOP() RightMotor(0, 0);
+
+#define LEFTADC ADCBuffer[0]
+#define RIGHTADC ADCBuffer[1]
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
