@@ -69,8 +69,6 @@ void Error_Handler(void);
 #define LEFT_ADC_GPIO_Port GPIOA
 #define WS2812_PIN_Pin GPIO_PIN_1
 #define WS2812_PIN_GPIO_Port GPIOB
-#define ECHO_Pin GPIO_PIN_12
-#define ECHO_GPIO_Port GPIOB
 #define PULSE_IN_Pin GPIO_PIN_7
 #define PULSE_IN_GPIO_Port GPIOB
 #define RIGHT_MOTOR_B_Pin GPIO_PIN_8

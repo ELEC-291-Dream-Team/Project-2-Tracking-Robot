@@ -60,6 +60,11 @@ char buffer[20];
 unsigned short LEDStep = 0;
 unsigned int TIM4Duty;
 unsigned int TIM4Period;
+unsigned int echoRise;
+unsigned int echoFall;
+unsigned int echoLength;
+unsigned short risePassed = 0;
+unsigned short cyclePassed = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -178,12 +183,6 @@ int main(void)
         /*sonar*/
         sprintf(buffer, "button");
         HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);// Sending in normal mode
-
-  	  if ((HAL_GPIO_ReadPin(GPIOB, ECHO_Pin))==1){
-  		  buffer[0] = '\0';
-  		  sprintf(buffer, "echo read");
-  		  HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);// Sending in normal mode
-  	  }
 
     /* USER CODE END WHILE */
 
@@ -309,15 +308,16 @@ static void MX_TIM1_Init(void)
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
   /* USER CODE BEGIN TIM1_Init 1 */
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 7200-1;
+  htim1.Init.Prescaler = 720-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 200-1;
+  htim1.Init.Period = 2000-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -334,6 +334,10 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
@@ -341,13 +345,21 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 20;
+  sConfigOC.Pulse = 1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
   sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -364,6 +376,7 @@ static void MX_TIM1_Init(void)
   }
   /* USER CODE BEGIN TIM1_Init 2 */
     HAL_TIM_Base_Start_IT(&htim1);
+    HAL_TIM_IC_Start_IT(&htim1,TIM_CHANNEL_4);
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
 
@@ -580,12 +593,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ECHO_Pin */
-  GPIO_InitStruct.Pin = ECHO_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(ECHO_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pins : RIGHT_MOTOR_B_Pin RIGHT_MOTOR_A_Pin */
   GPIO_InitStruct.Pin = RIGHT_MOTOR_B_Pin|RIGHT_MOTOR_A_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -669,6 +676,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                  (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
                  (unsigned short)(0.10 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
         HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)WS2812Buffer, ARRAYLEN(WS2812Buffer));
+
+        if (risePassed == 1)
+        {
+        	cyclePassed += 1;
+        }
     }
     // if (htim == &htim4)
     // {
@@ -690,6 +702,26 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
         {
             TIM4Period = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_2);
         }
+    }
+    if (htim == &htim1)
+    {
+    	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4) //rising edge
+    	{
+    		if (risePassed == 0)
+    		{
+    			echoRise = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_4);
+    			risePassed = 1;
+    			__HAL_TIM_SET_CAPTUREPOLARITY(&htim1, TIM_CHANNEL_4, TIM_INPUTCHANNELPOLARITY_FALLING);
+
+    		}
+    		else
+    		{
+    			echoFall = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_4);
+    			risePassed = 0;
+    			echoLength = echoFall-echoRise;
+    		}
+
+    	}
     }
 }
 
