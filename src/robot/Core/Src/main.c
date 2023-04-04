@@ -64,8 +64,8 @@ unsigned int echoRise;
 unsigned int echoFall;
 unsigned short risePassed = 0;
 unsigned short cyclesPassed = 0;
-float echoLength;
-unsigned int distance;
+unsigned int echoLength;
+float distance;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -182,8 +182,8 @@ int main(void)
         // HAL_Delay(500);
 
         /*sonar*/
-        distance = echoLength*340/20000; //distance in cm
-        sprintf(buffer, "%d\n", distance);
+        distance = echoLength*340.0/20000.0; //distance in cm
+        sprintf(buffer, "%d\n", (int)distance);
         HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);// Sending in normal mode
 
     /* USER CODE END WHILE */
