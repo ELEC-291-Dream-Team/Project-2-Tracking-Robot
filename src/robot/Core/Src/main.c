@@ -62,9 +62,10 @@ unsigned int TIM4Duty;
 unsigned int TIM4Period;
 unsigned int echoRise;
 unsigned int echoFall;
-unsigned int echoLength;
 unsigned short risePassed = 0;
-unsigned short cyclePassed = 0;
+unsigned short cyclesPassed = 0;
+float echoLength;
+unsigned int distance;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -181,7 +182,8 @@ int main(void)
         // HAL_Delay(500);
 
         /*sonar*/
-        sprintf(buffer, "button");
+        distance = echoLength*340/20000; //distance in cm
+        sprintf(buffer, "%d\n", distance);
         HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);// Sending in normal mode
 
     /* USER CODE END WHILE */
@@ -679,7 +681,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
         if (risePassed == 1)
         {
-        	cyclePassed += 1;
+        	cyclesPassed += 1;
         }
     }
     // if (htim == &htim4)
@@ -709,6 +711,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     	{
     		if (risePassed == 0)
     		{
+    			//ARR counts once every 10us or 1E-5s
     			echoRise = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_4);
     			risePassed = 1;
     			__HAL_TIM_SET_CAPTUREPOLARITY(&htim1, TIM_CHANNEL_4, TIM_INPUTCHANNELPOLARITY_FALLING);
@@ -718,7 +721,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     		{
     			echoFall = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_4);
     			risePassed = 0;
-    			echoLength = echoFall-echoRise;
+    			cyclesPassed = 0;
+    			echoLength = echoFall*10 + cyclesPassed*20000 - echoRise*10; //time in us
+
     		}
 
     	}
