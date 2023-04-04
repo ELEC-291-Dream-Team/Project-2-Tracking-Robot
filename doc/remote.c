@@ -1,6 +1,8 @@
+
 /*
 Timer 0: 5kHz ouput
 Timer 2: 1kHz output -> going to be used for the PWM
+
 */
 
 #include <EFM8LB1.h>
@@ -22,13 +24,13 @@ Timer 2: 1kHz output -> going to be used for the PWM
 #define Bpin P1_3
 #define LEDpin P1_4
 
-#define LCD_RS P2_6
+#define LCD_RS P3_0
 // #define LCD_RW Px_x // Not used in this code.  Connect to GND
-#define LCD_E P2_5
-#define LCD_D4 P2_4
-#define LCD_D5 P2_3
-#define LCD_D6 P2_2
-#define LCD_D7 P2_1
+#define LCD_E P2_6
+#define LCD_D4 P2_5
+#define LCD_D5 P2_4
+#define LCD_D6 P2_3
+#define LCD_D7 P2_2
 #define CHARS_PER_LINE 16
 
 // Define states for movement
@@ -381,6 +383,8 @@ void main(void)
 	float NS_Volt;
 	float EW_Volt;
 	int beacon = 1;
+	char buffer1[17];
+	char buffer2[17];
 
 	TIMER_OUT_0 = 0;
 	TIMER_OUT_0_INVERTED = 1;
@@ -450,46 +454,61 @@ void main(void)
 		if(beacon){
 			pulse_width = 200; // 100%
 			LEDpin = 0; // LED on
+			sprintf(buffer1, "Beacon Mode     ");
+			sprintf(buffer2, "Control Disabled");
 		}
 		else{
 			LEDpin = 1; // LED off
+			sprintf(buffer1, "Controller Mode ");
+
 			switch (y*10+x){ // y*10+x
 				// % Duty * 2 = pulse width
 				case N:
 					pulse_width = 180; // 90%
+					sprintf(buffer2, "Direction: N    ");
       				break;
 				
 				case NE:
       				pulse_width = 160; // 80%
+					sprintf(buffer2, "Direction: NE   ");
       				break;
 
 				case E:
       				pulse_width = 140; // 70%
+					sprintf(buffer2, "Direction: E    ");
       				break;
 
     			case SE:
       				pulse_width = 120; // 60%
+					sprintf(buffer2, "Direction: SE   ");
       				break;
 
     			case S:
       				pulse_width = 100; // 50%
+					sprintf(buffer2, "Direction: S    ");
       				break;
 
     			case SW:
       				pulse_width = 80; // 40%
+					sprintf(buffer2, "Direction: SW   ");
       				break;
 
 				case W:
       				pulse_width = 60; // 30%
+					sprintf(buffer2, "Direction: W    ");
       				break;
 
     			case NW:
       				pulse_width = 40; // 20%
+					sprintf(buffer2, "Direction: NW   ");
       				break;
 
     			default: // Waiting
 					pulse_width = 20; // 10%
+					sprintf(buffer2, "Direction: None ");
 			}
 		}
+		LCDprint(buffer1, 1, 1);
+		LCDprint(buffer2, 2, 1);
 	}
 }
