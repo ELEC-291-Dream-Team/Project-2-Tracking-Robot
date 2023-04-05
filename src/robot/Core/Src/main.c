@@ -34,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-// #define DEBUGGING
+#define DEBUGGING
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,11 +56,23 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 uint8_t WS2812Buffer[24 * LED_COUNT] = {0};
-uint16_t ADCBuffer[100];
-char StringBuffer[100];
 unsigned short LEDStep = 0;
-unsigned int TIM4Pulse;
-unsigned int TIM4Period;
+
+uint16_t ADCBuffer[100];
+
+char StringBuffer[100];
+
+unsigned int TIM4LastFallingEdge;
+unsigned int TIM4FallingEdge;
+unsigned int ReceivedPeriodBuffer;
+unsigned int ReceivedPeriod;
+
+unsigned int SonarRisingEdge;
+unsigned int SonarFallingEdge;
+unsigned int SonarOverflowCount = 0;
+long SonarPulse;
+unsigned int SonarPulsePolarity = 1;
+
 int Mode = 0; // 0 = track, 1 = controlled
 /* USER CODE END PV */
 
@@ -80,6 +92,7 @@ void SetColorAll(unsigned short r, unsigned short g, unsigned short b);
 void Rainbow(int length, float phase, float brightness);
 void LeftMotor(int a, int b);
 void RightMotor(int a, int b);
+void SetTailLights(unsigned short r, unsigned short g, unsigned short b);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -129,21 +142,22 @@ int main(void)
     RIGHTSTOP();
 
     SetColorAll(0, 0, 0);
+
+    sprintf(StringBuffer, "Start\r\n");
+    HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-        // HAL_Delay(100);
-        // sprintf(StringBuffer, "%4d %4d\r\n", LEFTADC, RIGHTADC);
-        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
         switch (Mode)
         {
         case 0: // tracking mode
 #ifdef DEBUGGING
-            sprintf(StringBuffer, "%4d %4d\r\n", LEFTADC, RIGHTADC);
+            sprintf(StringBuffer, "Mode 0 ADC: %4d %4d Sonar: %d OV: %d\r\n", LEFTADC, RIGHTADC, SonarPulse, SonarOverflowCount);
             HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+            HAL_Delay(10);
 #endif
             if (LEFTADC < TARGETADC - DEADZONE)
             {
@@ -173,11 +187,43 @@ int main(void)
             break;
         case 1: // controlled mode
 #ifdef DEBUGGING
-            sprintf(StringBuffer, "%4d %4d\r\n", TIM4Pulse, TIM4Period);
+            sprintf(StringBuffer, "Mode 1 PeriodB: %4d Period: %4d\r\n", ReceivedPeriodBuffer, ReceivedPeriod);
             HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+            HAL_Delay(10);
 #endif
-            if (TIM4Pulse < 100)
+            ReceivedPeriod = ReceivedPeriodBuffer;
+            if (ReceivedPeriod != 0)
             {
+                if (ReceivedPeriod < 600 + 150)
+                {
+                    LEFTSTOP();
+                    RIGHTSTOP();
+                    SetTailLights(30, 0, 0);
+                }
+                else if (ReceivedPeriod < 900 + 150)
+                {
+                    LEFTREVERSE();
+                    RIGHTFORWARD();
+                    SetTailLights(0, 0, 0);
+                }
+                else if (ReceivedPeriod < 1200 + 150)
+                {
+                    LEFTFORWARD();
+                    RIGHTREVERSE();
+                    SetTailLights(0, 0, 0);
+                }
+                else if (ReceivedPeriod < 1500 + 150)
+                {
+                    LEFTREVERSE();
+                    RIGHTREVERSE();
+                    SetTailLights(10, 10, 10);
+                }
+                else if (ReceivedPeriod < 1800 + 150)
+                {
+                    LEFTFORWARD();
+                    RIGHTFORWARD();
+                    SetTailLights(0, 0, 0);
+                }
             }
             break;
         default:
@@ -305,14 +351,17 @@ static void MX_TIM1_Init(void)
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
+    TIM_OC_InitTypeDef sConfigOC = {0};
+    TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
     /* USER CODE BEGIN TIM1_Init 1 */
 
     /* USER CODE END TIM1_Init 1 */
     htim1.Instance = TIM1;
-    htim1.Init.Prescaler = 7200 - 1;
+    htim1.Init.Prescaler = 720 - 1;
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim1.Init.Period = 200 - 1;
+    htim1.Init.Period = 2000 - 1;
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.RepetitionCounter = 0;
     htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -325,15 +374,55 @@ static void MX_TIM1_Init(void)
     {
         Error_Handler();
     }
+    if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
+    {
+        Error_Handler();
+    }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
     {
         Error_Handler();
     }
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = 1;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+    if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+    sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+    sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+    sBreakDeadTimeConfig.DeadTime = 0;
+    sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+    sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+    sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+    if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
     /* USER CODE BEGIN TIM1_Init 2 */
     HAL_TIM_Base_Start_IT(&htim1);
+    HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
     /* USER CODE END TIM1_Init 2 */
+    HAL_TIM_MspPostInit(&htim1);
 }
 
 /**
@@ -357,7 +446,7 @@ static void MX_TIM2_Init(void)
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 7200 - 1;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 10000 - 1;
+    htim2.Init.Period = 5000 - 1;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -450,9 +539,9 @@ static void MX_TIM4_Init(void)
 
     /* USER CODE END TIM4_Init 0 */
 
-    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
-    TIM_IC_InitTypeDef sConfigIC = {0};
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
 
     /* USER CODE BEGIN TIM4_Init 1 */
 
@@ -460,33 +549,19 @@ static void MX_TIM4_Init(void)
     htim4.Instance = TIM4;
     htim4.Init.Prescaler = 7200 - 1;
     htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim4.Init.Period = 10000;
+    htim4.Init.Period = 65535;
     htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
     if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
-    sSlaveConfig.InputTrigger = TIM_TS_TI2FP2;
-    sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    sSlaveConfig.TriggerPrescaler = TIM_ICPSC_DIV1;
-    sSlaveConfig.TriggerFilter = 0;
-    if (HAL_TIM_SlaveConfigSynchro(&htim4, &sSlaveConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-    sConfigIC.ICFilter = 0;
-    if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
     {
         Error_Handler();
     }
@@ -496,8 +571,16 @@ static void MX_TIM4_Init(void)
     {
         Error_Handler();
     }
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+    {
+        Error_Handler();
+    }
     /* USER CODE BEGIN TIM4_Init 2 */
-    HAL_TIM_IC_Start(&htim4, TIM_CHANNEL_1);
+    HAL_TIM_Base_Start_IT(&htim4);
     HAL_TIM_IC_Start_IT(&htim4, TIM_CHANNEL_2);
     /* USER CODE END TIM4_Init 2 */
 }
@@ -564,15 +647,26 @@ static void MX_GPIO_Init(void)
     /* USER CODE END MX_GPIO_Init_1 */
 
     /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(LED_BUILTIN_GPIO_Port, LED_BUILTIN_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOA, LEFT_MOTOR_B_Pin | LEFT_MOTOR_A_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOB, RIGHT_MOTOR_B_Pin | RIGHT_MOTOR_A_Pin, GPIO_PIN_RESET);
+
+    /*Configure GPIO pin : LED_BUILTIN_Pin */
+    GPIO_InitStruct.Pin = LED_BUILTIN_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(LED_BUILTIN_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pins : LEFT_MOTOR_B_Pin LEFT_MOTOR_A_Pin */
     GPIO_InitStruct.Pin = LEFT_MOTOR_B_Pin | LEFT_MOTOR_A_Pin;
@@ -632,6 +726,12 @@ void Rainbow(int length, float phase, float brightness)
     }
 }
 
+void SetTailLights(unsigned short r, unsigned short g, unsigned short b)
+{
+    SetColor(0, r, g, b);
+    SetColor(1, r, g, b);
+}
+
 void LeftMotor(int a, int b)
 {
     HAL_GPIO_WritePin(LEFT_MOTOR_A_GPIO_Port, LEFT_MOTOR_A_Pin, a);
@@ -655,45 +755,86 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if (htim == &htim1)
-    {
-        LEDStep += 2;
-        // Rainbow(10, LEDStep / 255.0, 0.05);
-        SetColor(2,
-                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
-                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
-                 (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
-        HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)WS2812Buffer, ARRAYLEN(WS2812Buffer));
-    }
     if (htim == &htim2)
     {
 #ifdef DEBUGGING
         // sprintf(StringBuffer, "tim2 overflows\r\n");
         // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
 #endif
-        Mode = 0;
+        if (HAL_GPIO_ReadPin(PULSE_IN_GPIO_Port, PULSE_IN_Pin) == 1)
+            Mode = 0;
     }
-    // if (htim == &htim4)
-    // {
-    //     // no more pulse received
-    //     sprintf(StringBuffer, "TIM4 overflows %lu\r\n", __HAL_TIM_GET_COUNTER(&htim4));
-    //     HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
-    // }
+    if (htim == &htim1)
+    {
+#ifdef DEBUGGING
+        // sprintf(StringBuffer, "tim1 overflows %d\r\n", __HAL_TIM_GetCounter(&htim1));
+        // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+#endif
+        SonarOverflowCount++;
+        LEDStep += 1;
+        switch (Mode)
+        {
+        case 0:
+            SetColorAll(
+                (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
+                (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
+                (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
+            break;
+        case 1:
+            SetColor(2,
+                     (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0)) * 0xff + 0x7f)),
+                     (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 1.0 / 3)) * 0xff + 0x7f)),
+                     (unsigned short)(0.15 * (cos(2 * M_PI * (LEDStep / 255.0 - 2.0 / 3)) * 0xff + 0x7f)));
+            break;
+        default:
+            break;
+        }
+        HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)WS2812Buffer, ARRAYLEN(WS2812Buffer));
+    }
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
+    if (htim == &htim1)
+    {
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
+        {
+            if (SonarPulsePolarity == 1)
+            {
+                SonarRisingEdge = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_1);
+                SonarPulsePolarity = 0;
+                SonarOverflowCount = 0;
+                __HAL_TIM_SET_CAPTUREPOLARITY(&htim1, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_FALLING);
+#ifdef DEBUGGING
+                HAL_GPIO_WritePin(LED_BUILTIN_GPIO_Port, LED_BUILTIN_Pin, 1);
+#endif
+            }
+            else
+            {
+                SonarFallingEdge = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_1);
+                SonarPulse = SonarOverflowCount * 2000 + SonarFallingEdge - SonarRisingEdge;
+                SonarPulsePolarity = 1;
+                __HAL_TIM_SET_CAPTUREPOLARITY(&htim1, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_RISING);
+#ifdef DEBUGGING
+                HAL_GPIO_WritePin(LED_BUILTIN_GPIO_Port, LED_BUILTIN_Pin, 0);
+#endif
+            }
+        }
+    }
     if (htim == &htim4)
     {
-        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) // rising edge
+        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2) // falling edge
         {
-            TIM4Pulse = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_1);
-            TIM4Period = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_2);
+            TIM4FallingEdge = HAL_TIM_ReadCapturedValue(&htim4, TIM_CHANNEL_2);
+            ReceivedPeriodBuffer = TIM4FallingEdge - TIM4LastFallingEdge;
+            TIM4LastFallingEdge = TIM4FallingEdge;
+
 #ifdef DEBUGGING
-            sprintf(StringBuffer, "tim4 ch2 %4d %4d\r\n", TIM4Pulse, TIM4Period);
-            HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
+            // sprintf(StringBuffer, "tim4 ch2 %4d %4d\r\n", ReceivedPeriodBuffer, TIM4FallingEdge);
+            // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
 #endif
             Mode = 1;
+            SetTailLights(0, 0, 0);
             __HAL_TIM_SetCounter(&htim2, 0);
         }
     }
@@ -702,9 +843,11 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 // void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
 // {
 // }
+
 // void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 // {
 // }
+
 /* USER CODE END 4 */
 
 /**

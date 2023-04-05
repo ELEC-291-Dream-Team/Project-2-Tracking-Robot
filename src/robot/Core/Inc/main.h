@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LED_BUILTIN_Pin GPIO_PIN_13
+#define LED_BUILTIN_GPIO_Port GPIOC
 #define LEFT_MOTOR_B_Pin GPIO_PIN_0
 #define LEFT_MOTOR_B_GPIO_Port GPIOA
 #define LEFT_MOTOR_A_Pin GPIO_PIN_1
@@ -69,6 +71,10 @@ void Error_Handler(void);
 #define LEFT_ADC_GPIO_Port GPIOA
 #define WS2812_PIN_Pin GPIO_PIN_1
 #define WS2812_PIN_GPIO_Port GPIOB
+#define SONAR_ECHO_Pin GPIO_PIN_8
+#define SONAR_ECHO_GPIO_Port GPIOA
+#define SONAR_TRIGGER_Pin GPIO_PIN_11
+#define SONAR_TRIGGER_GPIO_Port GPIOA
 #define PULSE_IN_Pin GPIO_PIN_7
 #define PULSE_IN_GPIO_Port GPIOB
 #define RIGHT_MOTOR_B_Pin GPIO_PIN_8
@@ -77,8 +83,8 @@ void Error_Handler(void);
 #define RIGHT_MOTOR_A_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define TARGETADC 100
-#define DEADZONE 10
+#define TARGETADC 700
+#define DEADZONE 100
 #define WS2812_HIGH_BIT 60
 #define WS2812_LOW_BIT 30
 #define LED_COUNT 3
