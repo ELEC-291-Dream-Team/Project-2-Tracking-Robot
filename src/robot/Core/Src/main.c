@@ -137,7 +137,7 @@ int main(void)
     // SetColor(0, 10, 0, 0);
     // SetColor(2, 10, 0, 0);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -187,9 +187,9 @@ int main(void)
 
         /*sonar*/
         distance = (echoLength*340.0)/20000.0; //distance in cm
-        sprintf(buffer, "dist: %d\n", (int)distance);
+        sprintf(buffer, "distance in cm: %d\n", (int)distance);
         HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);// Sending in normal mode
-        sprintf(buffer, "echo: %d\n", echoLength);
+        sprintf(buffer, "echo: %d\r\n", echoLength);
         HAL_UART_Transmit(&huart1,buffer,strlen(buffer),10);
 
     /* USER CODE END WHILE */
@@ -410,9 +410,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 720-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 2000-1;
+  htim2.Init.Period = 100-1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -435,10 +435,10 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 1000;
+  sConfigOC.Pulse = 50;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
