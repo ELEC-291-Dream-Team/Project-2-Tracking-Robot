@@ -90,6 +90,7 @@ void Error_Handler(void);
 #define LED_COUNT 3
 
 #define ARRAYLEN(x) sizeof(x) / sizeof(x[0])
+#define COMPARE(variable, value, tolerance) variable > value - tolerance && variable < value + tolerance
 #define LEFTFORWARD() LeftMotor(0, 1);
 #define LEFTREVERSE() LeftMotor(1, 0);
 #define LEFTSTOP() LeftMotor(0, 0);

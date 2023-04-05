@@ -192,38 +192,59 @@ int main(void)
             HAL_Delay(10);
 #endif
             ReceivedPeriod = ReceivedPeriodBuffer;
-            if (ReceivedPeriod != 0)
+            if (COMPARE(ReceivedPeriod, 600, 25)) // forward
             {
-                if (ReceivedPeriod < 600 + 150)
-                {
-                    LEFTSTOP();
-                    RIGHTSTOP();
-                    SetTailLights(30, 0, 0);
-                }
-                else if (ReceivedPeriod < 900 + 150)
-                {
-                    LEFTREVERSE();
-                    RIGHTFORWARD();
-                    SetTailLights(0, 0, 0);
-                }
-                else if (ReceivedPeriod < 1200 + 150)
-                {
-                    LEFTFORWARD();
-                    RIGHTREVERSE();
-                    SetTailLights(0, 0, 0);
-                }
-                else if (ReceivedPeriod < 1500 + 150)
-                {
-                    LEFTREVERSE();
-                    RIGHTREVERSE();
-                    SetTailLights(10, 10, 10);
-                }
-                else if (ReceivedPeriod < 1800 + 150)
-                {
-                    LEFTFORWARD();
-                    RIGHTFORWARD();
-                    SetTailLights(0, 0, 0);
-                }
+                LEFTFORWARD();
+                RIGHTFORWARD();
+                SetTailLights(0, 0, 0);
+            }
+            else if (COMPARE(ReceivedPeriod, 650, 25)) // forward right
+            {
+                LEFTFORWARD();
+                RIGHTSTOP();
+                SetTailLights(0, 0, 0);
+            }
+            else if (COMPARE(ReceivedPeriod, 700, 25)) // right
+            {
+                LEFTFORWARD();
+                RIGHTREVERSE();
+                SetTailLights(0, 0, 0);
+            }
+            else if (COMPARE(ReceivedPeriod, 750, 25)) // reverse right
+            {
+                LEFTSTOP();
+                RIGHTREVERSE();
+                SetTailLights(10, 10, 10);
+            }
+            else if (COMPARE(ReceivedPeriod, 800, 25)) // reverse
+            {
+                LEFTREVERSE();
+                RIGHTREVERSE();
+                SetTailLights(10, 10, 10);
+            }
+            else if (COMPARE(ReceivedPeriod, 850, 25)) // reverse left
+            {
+                LEFTREVERSE();
+                RIGHTSTOP();
+                SetTailLights(10, 10, 10);
+            }
+            else if (COMPARE(ReceivedPeriod, 900, 25)) // left
+            {
+                LEFTREVERSE();
+                RIGHTFORWARD();
+                SetTailLights(0, 0, 0);
+            }
+            else if (COMPARE(ReceivedPeriod, 950, 25)) // forward left
+            {
+                LEFTSTOP();
+                RIGHTFORWARD();
+                SetTailLights(0, 0, 0);
+            }
+            else // stop
+            {
+                LEFTSTOP();
+                RIGHTSTOP();
+                SetTailLights(30, 0, 0);
             }
             break;
         default:
