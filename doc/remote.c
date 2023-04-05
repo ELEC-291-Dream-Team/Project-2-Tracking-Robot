@@ -14,7 +14,7 @@ Timer 2: 1kHz output -> going to be used for the PWM
 #define SARCLK 18000000L // SARCLK frequency in Hz
 
 // #define RELOAD_TIMER0 106
-#define RELOAD_TIMER0 210 //16kHz
+#define RELOAD_TIMER0 210-3 //16kHz
 
 #define TIMER_OUT_0 P2_0
 #define TIMER_OUT_0_INVERTED P2_1
@@ -34,14 +34,18 @@ Timer 2: 1kHz output -> going to be used for the PWM
 #define CHARS_PER_LINE 16
 
 // Define states for movement
-#define N 21 
-#define NE 22
-#define E 12
-#define SE 02
-#define S 01
-#define SW 00
-#define W 10
-#define NW 20
+#define N 1
+#define E 2
+#define S 3
+#define W 4
+
+// Define Duty Cycle
+#define DUTYB 100*4
+#define DUTYN 85*4
+#define DUTYS 70*4
+#define DUTYE 55*4
+#define DUTYW 40*4
+#define DUTYOFF 25*4
 
 unsigned char overflow_count;
 int pulse_width;
@@ -267,7 +271,7 @@ void Timer2_ISR(void) interrupt INTERRUPT_TIMER2
 	TF2H = 0; // Clear Timer2 interrupt flag
 	// counting
 	pwm_count++;
-	if (pwm_count == 200)
+	if (pwm_count == 400)
 	{
 		pwm_count = 0;
 		TIMER_OUT_2 = 1;
@@ -378,8 +382,9 @@ int getsn(char *buff, int len)
 
 void main(void)
 {
-	int x = 1;
-	int y = 1;
+	int dir = 0;
+	int y = 0;
+	int x = 0;
 	float NS_Volt;
 	float EW_Volt;
 	int beacon = 1;
@@ -415,34 +420,38 @@ void main(void)
 		NS_Volt = Volts_at_Pin(QFP32_MUX_P1_1); // North/South Voltage
 		EW_Volt = Volts_at_Pin(QFP32_MUX_P1_2); // East/West Voltage
 
+
+		y = abs(2.3-NS_Volt); // y distance from center
+		x = abs(2.3-EW_Volt); // x distance from center
+
 		// North/South Joystick Coordinates
-		if(NS_Volt < 1.9){
-			y = 2;
-			printf("y = %d\n", y);
+		if(y > x){
+			if(NS_Volt < 1.9){
+				dir = 1; // North
+			}
+			else if(NS_Volt > 2.7){
+				dir = 3; // South
+			}
+			else{
+				dir = 0; // Wait
+			}
 		}
-		else if(NS_Volt > 2.7){
-			y = 0;
-			printf("y = %d\n", y);
+		// East/West Joystick Coordinates
+		else if(x > y){
+			if(EW_Volt < 1.9){
+				dir = 4; // West
+			}
+			else if(EW_Volt > 2.7){
+				dir = 2; // East
+			}
+			else{
+				dir = 0; // Wait
+			}
 		}
 		else{
-			y = 1;
-			printf("y = %d\n", y);
+			dir = 0; // Wait
 		}
 
-		// East/West Joystick Coordinates
-		if(EW_Volt < 1.9){
-			x = 0;
-			printf("x = %d\n", x);
-		}
-		else if(EW_Volt > 2.7){
-			x = 2;
-			printf("x = %d\n", x);
-		}
-		else{
-			x = 1;
-			printf("x = %d\n", x);
-		}
-		
 		// Joystick Button Toggle
 		if(Bpin){
 			while(Bpin);
@@ -452,7 +461,7 @@ void main(void)
 		
 		// Variable PWM controlled by joystick
 		if(beacon){
-			pulse_width = 200; // 100%
+			pulse_width = DUTYB; // 100%
 			LEDpin = 0; // LED on
 			sprintf(buffer1, "Beacon Mode     ");
 			sprintf(buffer2, "Control Disabled");
@@ -461,50 +470,30 @@ void main(void)
 			LEDpin = 1; // LED off
 			sprintf(buffer1, "Controller Mode ");
 
-			switch (y*10+x){ // y*10+x
+			switch (dir){ // y*10+x
 				// % Duty * 2 = pulse width
 				case N:
-					pulse_width = 180; // 90%
+					pulse_width = DUTYN; // 85%
 					sprintf(buffer2, "Direction: N    ");
-      				break;
-				
-				case NE:
-      				pulse_width = 160; // 80%
-					sprintf(buffer2, "Direction: NE   ");
       				break;
 
 				case E:
-      				pulse_width = 140; // 70%
+      				pulse_width = DUTYE; // 70%
 					sprintf(buffer2, "Direction: E    ");
       				break;
 
-    			case SE:
-      				pulse_width = 120; // 60%
-					sprintf(buffer2, "Direction: SE   ");
-      				break;
-
     			case S:
-      				pulse_width = 100; // 50%
+      				pulse_width = DUTYS; // 55%
 					sprintf(buffer2, "Direction: S    ");
       				break;
 
-    			case SW:
-      				pulse_width = 80; // 40%
-					sprintf(buffer2, "Direction: SW   ");
-      				break;
-
 				case W:
-      				pulse_width = 60; // 30%
+      				pulse_width = DUTYW; // 40%
 					sprintf(buffer2, "Direction: W    ");
       				break;
 
-    			case NW:
-      				pulse_width = 40; // 20%
-					sprintf(buffer2, "Direction: NW   ");
-      				break;
-
     			default: // Waiting
-					pulse_width = 20; // 10%
+					pulse_width = DUTYOFF; // 25%
 					sprintf(buffer2, "Direction: None ");
 			}
 		}
