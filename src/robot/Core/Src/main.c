@@ -72,6 +72,10 @@ unsigned int SonarFallingEdge;
 unsigned int SonarOverflowCount = 0;
 long SonarPulse;
 unsigned int SonarPulsePolarity = 1;
+float distance;
+unsigned int count_120 = 100; // test till car hits 120 degrees
+
+unsigned short ROOMBA_OVERRIDE = 0;
 
 int Mode = 0; // 0 = track, 1 = controlled
 /* USER CODE END PV */
@@ -151,6 +155,56 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
+
+        //check for roomba button press and switch states
+        if (ROOMBA_OVERRIDE_Button == 1){
+            while (ROOMBA_OVERRIDE_Button == 1){
+                //debounce
+            }
+            ROOMBA_OVERRIDE = !ROOMBA_OVERRIDE;
+        }
+
+        //toggle buzzer
+        if (distance > 3 && distance < 4){
+            //toggle buzzer pin on
+            //BUZZER_Pin = 1;
+
+            if (toggled == 0){
+                HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
+                toggled = 1;
+            }
+            
+        }
+        else{
+            //toggle buzzer pin off
+            //BUZZER_Pin = 0;
+            HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_3);
+            toggled = 0;
+        }
+        
+    	/*distance calc*/
+    	distance = (SonarPulse*342.0)/2000.0; //time in 10^5 * velocity/ 2 * 10^3
+        //if statement to toggle roomba mode
+        if (ROOMBA_OVERRIDE == 1);
+        {
+            if(distance > 3){
+                // move forward
+                LEFTFORWARD();
+                RIGHTFORWARD();
+            }
+            else{
+                // rotate 120 degrees
+                for(int i = 0; i < count_120; i++){
+                    LEFTREVERSE();
+                    RIGHTFORWARD();
+
+                }            
+            }
+        }
+
+        else{ //begginging of else statement which has the two cases for controller input
+
+        
         switch (Mode)
         {
         case 0: // tracking mode
@@ -161,7 +215,9 @@ int main(void)
 #endif
             if (LEFTADC < TARGETADC - DEADZONE)
             {
-                LEFTFORWARD();
+                if (distance > 3){ // stop if distance < 3cm
+                    LEFTFORWARD();
+                }
             }
             else if (LEFTADC > TARGETADC + DEADZONE)
             {
@@ -174,7 +230,9 @@ int main(void)
 
             if (RIGHTADC < TARGETADC - DEADZONE)
             {
-                RIGHTFORWARD();
+                if (distance > 3){ // stop if distance < 3cm
+                    RIGHTFORWARD();
+                }
             }
             else if (RIGHTADC > TARGETADC + DEADZONE)
             {
@@ -220,15 +278,19 @@ int main(void)
                 }
                 else if (ReceivedPeriod < 1800 + 150)
                 {
-                    LEFTFORWARD();
-                    RIGHTFORWARD();
-                    SetTailLights(0, 0, 0);
+                    if (distance > 3){
+                        LEFTFORWARD();
+                        RIGHTFORWARD();
+                        SetTailLights(0, 0, 0);
+                    }
+                    
                 }
             }
             break;
         default:
             break;
         }
+        }//end of else statement
 
         /* USER CODE END WHILE */
 

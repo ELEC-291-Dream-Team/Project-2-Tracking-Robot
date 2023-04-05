@@ -81,6 +81,8 @@ void Error_Handler(void);
 #define RIGHT_MOTOR_B_GPIO_Port GPIOB
 #define RIGHT_MOTOR_A_Pin GPIO_PIN_9
 #define RIGHT_MOTOR_A_GPIO_Port GPIOB
+// #define ROOMBA_OVERRIDE_Button 
+// #define BUZZER_Pin 
 
 /* USER CODE BEGIN Private defines */
 #define TARGETADC 700
