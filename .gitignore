@@ -1,5 +1,13 @@
 .metadata/
 .settings/
+.vscode
 .cproject
 [Dd]ebug/
 [Rr]elease/
+*.asm
+*.bat
+*.hex
+*.lkr
+*.lst
+*.map
+*.obj
