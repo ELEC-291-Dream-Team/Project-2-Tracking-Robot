@@ -855,7 +855,6 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
             // HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
 #endif
             Mode = 1;
-            SetTailLights(0, 0, 0);
             __HAL_TIM_SetCounter(&htim2, 0);
         }
     }
