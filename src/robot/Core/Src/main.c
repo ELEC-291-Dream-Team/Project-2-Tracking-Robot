@@ -154,16 +154,25 @@ int main(void)
         switch (Mode)
         {
         case 0: // tracking mode
+            if (SonarPulse < 40)
+            {
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 1);
+            }
+            else
+            {
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
+            }
 #ifdef DEBUGGING
             sprintf(StringBuffer, "Mode 0 ADC: %4d %4d Sonar: %d OV: %d\r\n", LEFTADC, RIGHTADC, SonarPulse, SonarOverflowCount);
             HAL_UART_Transmit(&huart1, StringBuffer, strlen(StringBuffer), 10);
             HAL_Delay(10);
 #endif
-            if (LEFTADC < TARGETADC - DEADZONE)
+
+            if (LEFTADC < TARGETADCLEFT - DEADZONE)
             {
                 LEFTFORWARD();
             }
-            else if (LEFTADC > TARGETADC + DEADZONE)
+            else if (LEFTADC > TARGETADCLEFT + DEADZONE)
             {
                 LEFTREVERSE();
             }
@@ -172,11 +181,11 @@ int main(void)
                 LEFTSTOP();
             }
 
-            if (RIGHTADC < TARGETADC - DEADZONE)
+            if (RIGHTADC < TARGETADCRIGHT - DEADZONE)
             {
                 RIGHTFORWARD();
             }
-            else if (RIGHTADC > TARGETADC + DEADZONE)
+            else if (RIGHTADC > TARGETADCRIGHT + DEADZONE)
             {
                 RIGHTREVERSE();
             }
@@ -194,57 +203,74 @@ int main(void)
             ReceivedPeriod = ReceivedPeriodBuffer;
             if (COMPARE(ReceivedPeriod, 600, 25)) // forward
             {
-                LEFTFORWARD();
-                RIGHTFORWARD();
-                SetTailLights(0, 0, 0);
+                if (SonarPulse > 30)
+                {
+                    LEFTFORWARD();
+                    RIGHTFORWARD();
+                    SetTailLights(0, 0, 0);
+                    HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
+                }
+                else
+                {
+                    SetTailLights(30, 0, 0);
+                    HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 1);
+                }
             }
             else if (COMPARE(ReceivedPeriod, 650, 25)) // forward right
             {
                 LEFTFORWARD();
                 RIGHTSTOP();
                 SetTailLights(0, 0, 0);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
             }
             else if (COMPARE(ReceivedPeriod, 700, 25)) // right
             {
                 LEFTFORWARD();
                 RIGHTREVERSE();
                 SetTailLights(0, 0, 0);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
             }
             else if (COMPARE(ReceivedPeriod, 750, 25)) // reverse right
             {
                 LEFTSTOP();
                 RIGHTREVERSE();
                 SetTailLights(10, 10, 10);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 1);
             }
             else if (COMPARE(ReceivedPeriod, 800, 25)) // reverse
             {
                 LEFTREVERSE();
                 RIGHTREVERSE();
                 SetTailLights(10, 10, 10);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 1);
             }
             else if (COMPARE(ReceivedPeriod, 850, 25)) // reverse left
             {
                 LEFTREVERSE();
                 RIGHTSTOP();
                 SetTailLights(10, 10, 10);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 1);
             }
             else if (COMPARE(ReceivedPeriod, 900, 25)) // left
             {
                 LEFTREVERSE();
                 RIGHTFORWARD();
                 SetTailLights(0, 0, 0);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
             }
             else if (COMPARE(ReceivedPeriod, 950, 25)) // forward left
             {
                 LEFTSTOP();
                 RIGHTFORWARD();
                 SetTailLights(0, 0, 0);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
             }
             else // stop
             {
                 LEFTSTOP();
                 RIGHTSTOP();
                 SetTailLights(30, 0, 0);
+                HAL_GPIO_WritePin(BUZZER_PIN_GPIO_Port, BUZZER_PIN_Pin, 0);
             }
             break;
         default:
@@ -680,7 +706,7 @@ static void MX_GPIO_Init(void)
     HAL_GPIO_WritePin(GPIOA, LEFT_MOTOR_B_Pin | LEFT_MOTOR_A_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOB, RIGHT_MOTOR_B_Pin | RIGHT_MOTOR_A_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, BUZZER_PIN_Pin | RIGHT_MOTOR_B_Pin | RIGHT_MOTOR_A_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pin : LED_BUILTIN_Pin */
     GPIO_InitStruct.Pin = LED_BUILTIN_Pin;
@@ -696,8 +722,8 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : RIGHT_MOTOR_B_Pin RIGHT_MOTOR_A_Pin */
-    GPIO_InitStruct.Pin = RIGHT_MOTOR_B_Pin | RIGHT_MOTOR_A_Pin;
+    /*Configure GPIO pins : BUZZER_PIN_Pin RIGHT_MOTOR_B_Pin RIGHT_MOTOR_A_Pin */
+    GPIO_InitStruct.Pin = BUZZER_PIN_Pin | RIGHT_MOTOR_B_Pin | RIGHT_MOTOR_A_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

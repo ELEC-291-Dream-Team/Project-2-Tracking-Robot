@@ -75,6 +75,8 @@ void Error_Handler(void);
 #define SONAR_ECHO_GPIO_Port GPIOA
 #define SONAR_TRIGGER_Pin GPIO_PIN_11
 #define SONAR_TRIGGER_GPIO_Port GPIOA
+#define BUZZER_PIN_Pin GPIO_PIN_6
+#define BUZZER_PIN_GPIO_Port GPIOB
 #define PULSE_IN_Pin GPIO_PIN_7
 #define PULSE_IN_GPIO_Port GPIOB
 #define RIGHT_MOTOR_B_Pin GPIO_PIN_8
@@ -83,8 +85,9 @@ void Error_Handler(void);
 #define RIGHT_MOTOR_A_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define TARGETADC 700
-#define DEADZONE 100
+#define TARGETADCLEFT 700
+#define TARGETADCRIGHT 1050
+#define DEADZONE 150
 #define WS2812_HIGH_BIT 60
 #define WS2812_LOW_BIT 30
 #define LED_COUNT 3
